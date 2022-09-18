@@ -6,7 +6,6 @@ void setup(){
   OCR1B=73;//threshold
 
   //タイマー1制御レジスタ2
-  // 7    6     5      4      3    2     1    0
   // CTC1 PWM1A COM1A1 COM1A0 CS13 CCS12 CS11 CS10
   //-----
   // 0    CTC PWM使うので無関係
@@ -23,9 +22,20 @@ void setup(){
   // 00  ここへの書き込みは無意味
   GTCCR=B01010000;
 
+  //タイマ―割り込み許可レジスタ
+  // - OCIE1A OCIE1B OCIE0A OCIE0B TOIE1 TOIE0 -
+  //-----
+  // -    予約
+  // 0000 比較割り込み 使わん
+  // 10   溢れ割り込み タイマー0は使わないので無関係 タイマー1使うTOIE1=1
+  // -   予約
+  //TIMSK=B00000100;
 
   TCNT1=0;//timer1 reset
 }
 void loop(){
   OCR1B=millis()%1000<50?73:OCR1C;
 }
+/*ISR(TIMER1_OVF_vect){
+  OCR1B=millis()%1000<50?73:OCR1C;
+}*/
