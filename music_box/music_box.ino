@@ -1,52 +1,43 @@
+#include "sheet.h"
+#define _BV_PINB0 1
+#define _BV_TOV0 2
+
 void setup(){
-  //   DDRB PORTB
-  // +-----+-----+-------+
-  //    0     0   IN HI-Z
-  //    0     1   IN P-UP
-  //    1     0    OUT L
-  //    1     1    OUT H
-  DDRB=0b001000;//set PIN3 to output
-  PORTB=0b001000;//set ZZHZZZ
+	// DDRB PORTB:state, 00:IN_HI-Z, 01:IN_P-UP, 10:OUT_L, 11:OUT_H
 
-  OCR1C=143;//MAX
-  OCR1B=0;//threshold
+	// 0: INPUT_PULLUP
+	// 1: HIGH
+	// 2: LOW
+	// --ZZZLHP
+	DDRB  =0b00000110;// [ポートB方向レジスタ] OUT 1 2
+	PORTB =0b00000011;// [ポートB出力レジスタ] PU||H 0 1
 
-  //タイマー1制御レジスタ2
-  // CTC1 PWM1A COM1A1 COM1A0 CS13 CCS12 CS11 CS10
-  //-----
-  // 0    CTC PWM使うので無関係
-  // 000  PWM1A使わん
-  // 1001 (PCK||CK)/CS/OCR1C=Hz
-  TCCR1=0b00000001;
+	TIMSK =0b00000000;// [タイマ―割り込み許可レジスタ] - OCIE1A OCIE1B OCIE0A OCIE0B TOIE1 TOIE0 : 無効
 
-  //一般タイマ―制御レジスタ という名の タイマー1制御レジスタ サブ
-  // TSM PWM1B COM1B1 COM1B0 FOC1B FOC1A PSR1 PSR0
-  //-----
-  // 0   ようわからんけど無関係
-  // 101 PWM1B使う /OC1B(PIN3)使うのでCOM1B=01
-  // 00  PWM1B=1なので無関係 Aは使わないので無関係
-  // 00  ここへの書き込みは無意味
-  GTCCR=0b01010000;
+	TCCR0A=0b00000011;
+	TCCR0B=0b00001010;// [タイマー0制御レジスタ] COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 : FOC0A FOC0B - - WGM02 CS02 CS01 CS00 : 高速PWM 1/8分周
+	OCR0A =F_CPU/25e4;// [タイマ0レジスタA] 基準クロック 31.25kHz 32us
 
-  //タイマ―割り込み許可レジスタ
-  // - OCIE1A OCIE1B OCIE0A OCIE0B TOIE1 TOIE0 -
-  //-----
-  // -    予約
-  // 0000 比較割り込み 使わん
-  // 10   溢れ割り込み タイマー0は使わないので無関係 タイマー1使うTOIE1=1
-  // -   予約
-  //TIMSK=0b00000100;
+	TCCR1 =0b00000001;// [タイマー1制御レジスタ 1] CTC1 PWM1A COM1A1 COM1A0 CS13 CCS12 CS11 CS10 : 分周無し
+	GTCCR =0b01010000;// [タイマー1制御レジスタ 2] TSM PWM1B COM1B1 COM1B0 FOC1B FOC1A PSR1 PSR0 : PWM1B PB3有効
+	PLLCSR=0b00000111;// [PLL制御状態レジスタ] LSM - - - - PCKE PLLE PLOCK : 通常動作, PCK PLL Plock許可 64MHz動作
+	OCR1B=0;OCR1C=255;// [タイマ1レジスタBC] 250kHz動作
 
-  //PLL制御状態レジスタ
-  // LSM - - - - PCKE PLLE PLOCK
-  // 0    低速動作はしない
-  // 0000 予約
-  // 111  PCK, PLL Plock許可 64MHz動作
-  PLLCSR=0b00000111;
-
-  TCNT1=0;//timer1 reset
+	TCNT1=0;// [タイマー1] リセット
 }
 void loop(){
-  OCR1B=millis()%1000<50?72:OCR1C;//1760Hz
+	while( (PINB&_BV_PINB0));// PB0解放
+	while(!(PINB&_BV_PINB0));// PB0押下
+	core(sheet);// 再生
+}
+
+void core(){
+	DDRB|=0b00011000;// 3,4出力設定
+	do{
+
+		while(!(TIFR&_BV_TOV0));TIFR|=_BV_TOV0;// タイマー0待ち(32us) 強制解除
+		if(!(PINB&_BV_PINB0))break;// PB0押下で離脱
+	}while(0);
+	DDRB&=~0b00011000;// 3,4出力解除
 }
 
