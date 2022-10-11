@@ -9,6 +9,7 @@
 #define MTRKS 4
 
 const uint16_t t0[]={1911,1804,1703,1607,1517,1432,1351,1276,1204,1136,1073,1012};//C0~B0
+const uint8_t v0[]={0x40,0x80,0xc0,0xff};
 
 void sleep(){
 	uint8_t ddrb=DDRB,portb=PORTB;// ピン設定保存
@@ -27,63 +28,71 @@ void sleep(){
 }
 ISR(PCINT0_vect){}
 
-void play(const uint16_t *d){
+void play(const uint16_t *s){
 	DDRB|=0b00011110;// 1,2,3,4出力設定
 
-	const uint16_t *p[MTRKS];// 各トラックの先頭のポインタ
+	const uint16_t
+		*p[MTRKS];// 各トラックの先頭のポインタ
+	bool
+		d[MTRKS];// 減衰
 	uint8_t
 		l[MTRKS],// 音価
 		v[MTRKS],// 音量
+		w[MTRKS],// 波形
 		decay=1,// 減衰用タイマ
 		ntrks=0;// 有効トラック数
 	uint16_t
-		w,// PROGMEMから読んだ音符
+		t[MTRKS],_t[MTRKS],// 音高とその波形生成用カウンタ
 		dt,_dt=MTRKS,// 最小音価とそのカウンタ(トラック数で初期化(すぐ楽譜読込処理))
-		t[MTRKS],_t[MTRKS];// 音高とその波形生成用カウンタ
+		x=1;// PROGMEMから読んだ音符
 
-	dt=75e5/pgm_read_word_near(d++)/MIN_NOTE; // 最小音価 31250*240/BPM/minNote
+	dt=75e5/(pgm_read_word_near(s)>>8)/(pgm_read_word_near(s++)&0xff); // 最小音価 31250*240/BPM/minNote
 	for(uint8_t i=0;i<MTRKS;){
 		l[i]=1;// 音価を1で初期化(すぐ楽譜読込処理)
+		w[i]=0;// 波形を初期化(誤作動防止)
 		t[i++]=0;//音高の初期化(チャネル未使用の場合に備えて)
 	}
-	for(;ntrks<MTRKS;){//トラック数と各トラックの先頭の取得
-		if(pgm_read_word_near(d++)!=0)continue;// 0が来るまで飛ばす
-		if(pgm_read_word_near(d  )==0)break;// 0,0 譜面終了 離脱
-		p[ntrks++]=d;// トラックの先頭を取得
+	while(ntrks<MTRKS){//トラック数と各トラックの先頭の取得
+		if(pgm_read_word_near(s++)!=0)continue;// 0が来るまで飛ばす
+		if(pgm_read_word_near(s  )==0)break;// 0,0 譜面終了 離脱
+		p[ntrks++]=s;// トラックの先頭を取得
 	}
 
-	do{
+	while(x){// いずれかのパートが終わるまで
 		if(--_dt<ntrks){// 最小音価のカウンタが終了に近づいたら
 			if(!--l[_dt]){// 前の音符が終了したら
-				w=pgm_read_word_near(p[_dt]++);// 楽譜読込
-				l[_dt]=w;// 下位8bitが音価 (MIN_NOTE分音符*N) (uint8_t=uint16_tなので自動的に下位8bitが読まれる)
-				t[_dt]=(w>>8)?t0[(w>>8)&0xf]>>(w>>12):0;// 上位4bitがオクターブ 中位4bitが音高 (1-12)(0は休符)
-				_t[_dt]=0;// 波形生成用カウンタを0で初期化
-				v[_dt]=0xff;// 最大音量で初期化
+				x=pgm_read_word_near(p[_dt]++);// 楽譜読込
+				w[_dt]=((x>>14)&0x3)+1;// 波形2bit
+				v[_dt]=v0[(x>>12)&0x3];// 音量2bit
+				d[_dt]=!((x>>11)&0x1);// 減衰1bit
+				t[_dt]=(x&0x00f0)>0x00b0?0:t0[(x>>4)&0xf]>>((x>>8)&0x7);// オクターブ3bit+音高4bit(0-11)(12は休符)
+				_t[_dt]=0;// 波形生成用カウンタ初期化
+				l[_dt]=(x&0xf)+1;// 音価4bit(MIN_NOTE分音符*N)
 			}
 			if(!_dt)_dt=dt;// 最小音価カウンタリセット
 		}
 
 		OCR1B=// 各トラック1/4にして合成
-			(((_t[3]=(++_t[3]==t[3])?0:_t[3])<(t[3]>>2))?v[3]>>2:0)+// 出力波形生成 25%矩形波
-			(((_t[2]=(++_t[2]==t[2])?0:_t[2])<(t[2]>>2))?v[2]>>2:0)+
-			(((_t[1]=(++_t[1]==t[1])?0:_t[1])<(t[1]>>2))?v[1]>>2:0)+
-			(((_t[0]=(++_t[0]==t[0])?0:_t[0])<(t[0]>>2))?v[0]>>2:0);
+			(((_t[3]=(++_t[3]==t[3])?0:_t[3])<(t[3]>>w[3]))?v[3]>>2:0)+// 出力波形生成 矩形波
+			(((_t[2]=(++_t[2]==t[2])?0:_t[2])<(t[2]>>w[2]))?v[2]>>2:0)+
+			(((_t[1]=(++_t[1]==t[1])?0:_t[1])<(t[1]>>w[1]))?v[1]>>2:0)+
+			(((_t[0]=(++_t[0]==t[0])?0:_t[0])<(t[0]>>w[0]))?v[0]>>2:0);
 		switch(--decay){// 減衰
-			case 4:v[3]-=(v[3]>>6);break;// 上位2bitがある間は1-1/2^6倍
-			case 3:v[2]-=(v[2]>>6);break;
-			case 2:v[1]-=(v[1]>>6);break;
-			case 1:v[0]-=(v[0]>>6);break;
-			case 0:decay=96;// 32us*96毎
+			case 4:if(d[3])v[3]-=(v[3]>>5);break;// 上位3bitがある間は1-1/2^5倍
+			case 3:if(d[2])v[2]-=(v[2]>>5);break;
+			case 2:if(d[1])v[1]-=(v[1]>>5);break;
+			case 1:if(d[0])v[0]-=(v[0]>>5);break;
+			case 0:decay=192;// 32us*192毎
 		}
 
 		if(PB0_PUSHED){// PB0押下
 			while(PB0_PUSHED);
 			WAIT255;// チャタリング対策
-			break;//sleep();
+			//break;
+			sleep();
 		}
 		WAIT;
-	}while(w);
+	};
 	OCR1B=0;// PWMリセット
 	DDRB&=~0b00011110;// 1,2,3,4出力解除
 }
@@ -117,10 +126,9 @@ void setup(){
 	WAIT_(3);DDRB=0;
 	WAIT_(3);DDRB=0b00000110;
 	WAIT_(3);DDRB=0;
+	sleep();
 }
 void loop(){
-	sleep();play(sheet);// 再生
-	sleep();play(sheet0);// 再生
-	sleep();play(sheet12);// 再生
-	sleep();play(sheet3);// 再生
+	//sleep();
+	play(sheet);// 再生
 }
