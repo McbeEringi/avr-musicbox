@@ -2393,3 +2393,38 @@ static const uint16_t PROGMEM sheet[]={
 //c3q , g2q , c3q , RSq ,                                       // OP
   c3e , RSe , RSq , RSq , RSq ,                                 // ED
   0, 0 };
+static const uint16_t PROGMEM sheet_[]={
+  140,
+	0 ,
+  RSe , g5s , g5s , g5e , g5e , e5e , e5e , f5q , RSe , g5s , g5s , g5e , g5e , C5e , C5e , d5q , RSe , g5s , g5s , g5h , d5h , g4h , RSq , g5e , g5s , g5s ,
+  e5e , RSe , g5e , RSe , g5e , RSe , RSe , g5s , g5s , f5e , RSe , g5e , RSe , g5e , RSe , RSe , g5s , g5s , e5e , RSe , g5e , RSe , b5e , RSe , a5e , RSe , g5e , F5e , f5e , e5e , d5e , RSe , RSe , g5s , g5s ,
+  e5e , RSe , g5e , RSe , g5e , RSe , RSe , g5s , g5s , d5e , RSe , b5e , RSe , b5e , RSe , RSe , a5s , a5s , a5e , RSe , a5e , RSe , d6e , RSe , d6e , RSe , g5q , g5s , G5s , a5s , A5s , b5e , g5e , a5e , g5e ,
+  e5e , RSe , g5e , RSe , e5e , g5e , RSe , g5e , f5e , RSe , g5e , RSe , f5e , g5e , RSe , g5e , e5e , RSe , g5e , RSe , b5e , RSe  ,a5e , RSe , g5e , F5e , f5e , e5e , d5e , RSe , RSe , g5s , g5s ,
+  e5e , RSe , g5e , RSe , g5e , RSe , RSe , g5s , g5s , f5e , RSe , a5e , RSe , a5e , RSe , c6e , RSe , e6e , RSe , RSq , d6e , RSe , RSq ,
+//c6e , RSe , g5e , RSe , c6e , RSe , RSq ,                     // OP
+  c6e , g5s , G5s , a5s , A5s , b5e , c6e , RSe , c4q ,         // ED  
+  0,
+  RSq , RSq , C5e , C5e , d5q , RSq , RSq , A4e , A4e , b4q , RSq , RSe , F5h , c5h , RSe , g5h , RSq ,
+  RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e ,
+  RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , b3e , RSe , b3e , RSe , b3e , RSe , b3e , RSe , a3e , RSe , a3e , RSe , a3e , RSe , a3e , g3q , RSq , RSh ,
+  RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e ,
+  RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , a3e , RSe , a3e , RSe , a3e , RSe , a3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e ,
+//RSe , g3e , RSe , g3e , g3e , RSe , RSq ,                     // OP
+  g3e , RSe , RSq , c4e , RSe , c3q ,                           // ED
+  0,
+  RSq , RSw , RSw , RSe , RSe , f5h , b4h , RSq , g4h ,
+  RSe , e3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , f3e ,
+  RSe , e3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , g3e , RSe , F3e , RSe , F3e , RSe , F3e , RSe , F3e , RSw ,
+  RSe , e3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , f3e ,
+  RSe , e3e , RSe , e3e , RSe , e3e , RSe , e3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , f3e , RSe , e3e , RSe , d3e , RSe , f3e , RSe , f3e ,
+//RSe , e3e , RSe , e3e , e3e , RSe , RSq ,                     // OP
+  e3e , RSe , RSq , RSe , RSe , c2q ,                           // ED
+  0,
+  RSq , RSw , RSw , RSe , RSe , RSe , e5h , a4h , RSe , RSh ,
+  c3q , g2q , c2q , g2q , d2q , g2q , d2q , g2q , c3q , g2q , c2q , g2q , d2q , g2q , d2q , g2q ,
+  c3q , g2q , c2q , g2q , d2q , g2q , d2q , g2q , a2q , d2q , F2q , d2q , g2q , RSq , RSh ,
+  c3q , g2q , c3q , c3q , g2q , d2q , g2q , g2q , c3q , g2q , c3q , c3q , g2q , d2q , g2q , g2q ,
+  c3q , g2q , c3q , c3q , f2q , c2q , f2q , f2q , c3q , g2q , d2q , g2q ,
+//c3q , g2q , c3q , RSq ,                                       // OP
+  c3e , RSe , RSq , RSq , RSq ,                                 // ED
+  0, 0 };

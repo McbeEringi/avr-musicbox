@@ -111,4 +111,6 @@ void setup(){
 void loop(){
 	sleep();
 	play(sheet);// 再生
+	sleep();
+	play(sheet_);// 再生
 }
