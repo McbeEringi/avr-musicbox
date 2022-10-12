@@ -64,7 +64,7 @@ void play(const uint16_t *s){
 				x=pgm_read_word_near(p[_dt]++);// 楽譜読込
 				w[_dt]=((x>>14)&0x3)+1;// 波形2bit
 				v[_dt]=v0[(x>>12)&0x3];// 音量2bit
-				d[_dt]=!((x>>11)&0x1);// 減衰1bit
+				d[_dt]=(x>>11)&0x1;// 減衰1bit
 				t[_dt]=(x&0x00f0)>0x00b0?0:t0[(x>>4)&0xf]>>((x>>8)&0x7);// オクターブ3bit+音高4bit(0-11)(12は休符)
 				_t[_dt]=0;// 波形生成用カウンタ初期化
 				l[_dt]=(x&0xf)+1;// 音価4bit(MIN_NOTE分音符*N)
