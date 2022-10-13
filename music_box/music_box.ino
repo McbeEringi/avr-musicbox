@@ -102,7 +102,7 @@ void play(const uint16_t *s){
 			while(PB0_PUSHED);
 			WAIT255;// チャタリング対策
 			break;
-			//sleep();
+			blink(0b01010101);sleep();
 		}
 		WAIT;
 	};
