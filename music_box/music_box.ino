@@ -1,7 +1,6 @@
 #include <avr/sleep.h>
 #include "sheet.h"
 #define WAIT255 for(uint8_t i=-1;i>0;i--)WAIT
-#define WAIT_(x) for(uint16_t i=31250>>(x);i>0;i--)WAIT
 #define WAIT {while(!(TIFR&_BV_TOV0));TIFR|=_BV_TOV0;}// タイマー0待ち(32us) 強制解除
 #define PB0_PUSHED !(PINB&_BV_PINB0)
 #define _BV_PINB0 1
@@ -13,7 +12,7 @@ const uint8_t v0[]={0x40,0x80,0xc0,0xff};
 
 void sleep(){
 	uint8_t ddrb=DDRB,portb=PORTB;// ピン設定保存
-	DDRB=0;PORTB=1;// PB0以外無効化
+	DDRB=0;PORTB=1;// PB0 PU
 	GIMSK=0b00100000;// [一般割り込み許可レジスタ] - INT0 PCIE - - - - - : PCIEを設定
 	PCMSK=0b00000001;// [ピン変化割り込み許可レジスタ] - - PCINT5 PCINT4 PCINT3 PCINT2 PCINT1 PCINT0 : PB0を設定
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -28,8 +27,22 @@ void sleep(){
 }
 ISR(PCINT0_vect){}
 
+void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
+	for(uint8_t i=0;i<8;i++){
+		for(uint16_t j=31250>>4;j>0;j--)WAIT// 1/16秒
+		uint8_t mask=~0b00000110,ddrb=DDRB&mask,portb=PORTB&mask;
+		if((x>>i)&0x1){//1:H, 2:L
+			DDRB =ddrb +0b00000110;
+			PORTB=portb+0b00000010;
+		}else{//1:Z, 2:Z
+			DDRB =ddrb +0b00000000;
+			PORTB=portb+0b00000000;
+		}
+	}
+}
+
 void play(const uint16_t *s){
-	DDRB|=0b00011110;// 1,2,3,4出力設定
+	DDRB|=0b00011000;// 3,4出力設定
 
 	const uint16_t
 		*p[MTRKS];// 各トラックの先頭のポインタ
@@ -88,24 +101,18 @@ void play(const uint16_t *s){
 		if(PB0_PUSHED){// PB0押下
 			while(PB0_PUSHED);
 			WAIT255;// チャタリング対策
-			//break;
-			sleep();
+			break;
+			//sleep();
 		}
 		WAIT;
 	};
 	OCR1B=0;// PWMリセット
-	DDRB&=~0b00011110;// 1,2,3,4出力解除
+	DDRB&=~0b00011000;// 3,4出力解除
 }
 
 void setup(){
 	// DDRB PORTB:state, 00:IN_HI-Z, 01:IN_P-UP, 10:OUT_L, 11:OUT_H
-
-	// 0: INPUT_PULLUP
-	// 1: HIGH
-	// 2: LOW
-	// --ZZZLHP
-	DDRB  =0b00000110;// [ポートB方向レジスタ] OUT 1 2
-	PORTB =0b00000011;// [ポートB出力レジスタ] PU||H 0 1
+	DDRB  =0;PORTB =1;// [ポートB方向レジスタ] [ポートB出力レジスタ] PB0 PU
 
 	ADCSRA=0;         // [ADC制御レジスタ A] 停止
 
@@ -120,15 +127,9 @@ void setup(){
 
 	TIMSK =0b00000000;// [タイマ―割り込み許可レジスタ] - OCIE1A OCIE1B OCIE0A OCIE0B TOIE1 TOIE0 : 無効
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
-
-	DDRB=0;
-	WAIT_(2);DDRB=0b00000110;
-	WAIT_(3);DDRB=0;
-	WAIT_(3);DDRB=0b00000110;
-	WAIT_(3);DDRB=0;
-	sleep();
 }
 void loop(){
-	//sleep();
-	play(sheet);// 再生
+	blink(0b01100110);sleep();play(sheet0);// 再生
+	blink(0b01100110);sleep();play(sheet1);// 再生
+	blink(0b01100110);sleep();play(sheet2);// 再生
 }
