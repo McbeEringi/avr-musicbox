@@ -3,8 +3,10 @@
 #define WAIT255 for(uint8_t i=-1;i>0;i--)WAIT
 #define WAIT {while(!(TIFR&0b10));TIFR|=0b10;}// タイマー0待ち(32us) 強制解除
 #define PB0_PUSHED !(PINB&0b1)
-#define TRKS_FE for(uint8_t i=0;i<ntrks;i++)
+#define FOR(X) for(uint8_t i=0;i<X;i++)
 #define MTRKS 4
+#define _OUT OUT(3)OUT(2)OUT(1)OUT(0)
+#define OUT(I) +((_t[I]=(++_t[I]==t[I]?0:_t[I]))<(t[I]>>(w[I]?2:1))?v[I]>>2:0)// 各トラック1/4にして合成 矩形波
 
 static const uint16_t t0[]={1911,1804,1703,1607,1517,1432,1351,1276,1204,1136,1073,1012};//C0~B0
 
@@ -25,11 +27,8 @@ ISR(PCINT0_vect){}
 void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
 	static const uint8_t mask=0b00000110;
 	for(uint8_t i=0;i<8;i++){
-		if((x>>i)&0x1){//1:H, 2:L
-			DDRB=(~mask&DDRB)|(mask&0b00000110);PORTB=(~mask&PORTB)|(mask&0b00000010);
-		}else{//1:Z, 2:Z
-			DDRB=(~mask&DDRB)|(mask&0b00000000);PORTB=(~mask&PORTB)|(mask&0b00000000);
-		}
+		if((x>>i)&0x1){DDRB=(~mask&DDRB)|(mask&0b00000110);PORTB=(~mask&PORTB)|(mask&0b00000010);}//1:H, 2:L
+		else{DDRB=(~mask&DDRB)|(mask&0b00000000);PORTB=(~mask&PORTB)|(mask&0b00000000);}//1:Z, 2:Z
 		for(uint16_t j=31250>>4;j>0;j--)WAIT// 1/16秒
 	}
 }
@@ -47,12 +46,11 @@ void play(const uint16_t *s){
 	uint8_t
 		v[MTRKS],// 音量
 		l[MTRKS],// 音価
-		out,// 出力合成用
 		decay,// 減衰カウンタ
 		ntrks=0;// 有効トラック数
-  bool
-    w[MTRKS],// 波形
-    d[MTRKS];// 減衰
+	bool
+		w[MTRKS],// 波形
+		d[MTRKS];// 減衰
 
 	dt=75e5/(h>>2); // 最小音価 31250*240/BPM/minNote
 	while(ntrks<MTRKS){
@@ -66,7 +64,7 @@ void play(const uint16_t *s){
 		_x=1;/// チャネル合計を1で初期化
 		_dt=ntrks;// 最小音価カウンタをトラック数で初期化
 		decay=1;// 減衰カウンタを1で初期化
-		TRKS_FE{
+		FOR(ntrks){
 			x[i]=1;// チャネルを1で初期化
 			_p[i]=p[i];// チャネルポインタ初期化
 			l[i]=0;// 音価を0で初期化
@@ -77,21 +75,20 @@ void play(const uint16_t *s){
 				if(x[_dt]&&(!l[_dt]--)){// 前の音符が存在かつ終了したら
 					x[_dt]=pgm_read_word_near(_p[_dt]++);// PROGMEM読込
 					v[_dt]=0xff>>(x[_dt]>>15);// 音量
-          w[_dt]=(x[_dt]>>14)&0b1;// 波形
-          d[_dt]=(x[_dt]>>13)&0b1;// 減衰
-					t[_dt]=(x[_dt]&0b1111000000)>0b1011000000?0:t0[(x[_dt]>>6)&0b1111]>>((x[_dt]>>10)&0b111);// オクターブ3bit 音高4bit(12以上は休符)
+					w[_dt]=(x[_dt]>>14)&0b1;// 波形
+					d[_dt]=(x[_dt]>>13)&0b1;// 減衰
+					t[_dt]=((x[_dt]>>6)&0b1111)>0b1011?0:t0[(x[_dt]>>6)&0b1111]>>((x[_dt]>>10)&0b111);// オクターブ3bit 音高4bit(12以上は休符)
 					l[_dt]=x[_dt]&0b111111;// 音価6bit
 
 					_t[_dt]=0;// 波形生成用カウンタ初期化
 				}
 				if(!_dt){
 					_dt=dt;// 最小音価カウンタリセット
-					_x=0;TRKS_FE _x|=x[i];// チャネル合計 終了判定
+					_x=0;FOR(ntrks)_x|=x[i];// チャネル合計 終了判定
 				}
 			}
 
-			out=0;TRKS_FE out+=(_t[i]=(++_t[i]==t[i]?0:_t[i]))<(t[i]>>(w[i]?2:1))?v[i]>>2:0;// 各トラック1/4にして合成 矩形波
-			OCR1B=out;// レジスタに入れる
+			OCR1B=_OUT;// 波形生成 詳しくはマクロ参照
 
 			if(--decay<ntrks){// 減衰
 				if(!d[decay])v[decay]-=(v[decay]>>5);// 上位3bitがある間は1-1/2^5倍
