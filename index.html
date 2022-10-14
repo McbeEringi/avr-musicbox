@@ -21,6 +21,8 @@
 	<textarea class="input" id="inp" spellcheck="false">{
 	bpm:131,// テンポ
 	minNote:1/16,// 音符の最小単位
+	// ループ_ポーズ (どちらも1にすると複数曲再生ができなくなる)
+	lp:0b1_0,
 	vwd:[// 音量半分_音色_減衰無効化
 		0b0_1_1,
 		0b0_1_0,
@@ -79,10 +81,10 @@ r : 休符
 				return trs(core()).map(x=>new Float32Array([0,...x.slice(1)]));
 			},
 			pwav=[[1,1,0,0],[1,0,0,0]].map(x=>actx.createPeriodicWave(...fft(x.map(y=>y*2-1)))),
-			parse=({notes,bpm=120,minNote=1/16,vwd=new Array(4).fill(0b000)})=>(
+			parse=({notes,bpm=120,minNote=1/16,vwd=new Array(4).fill(0b000),lp=0})=>(
 				minNote=1/minNote,
 				[
-					(bpm<<8)|minNote,
+					(bpm*minNote<<2)|(lp&0b11),
 					...notes.split(',').flatMap((p,i)=>p.match(/[cdefgabr><]|\d+/ig).reduce((a,x)=>(
 						isNaN(x)?({'>':_=>a.o++,'<':_=>a.o--}[x]||(_=>{
 							const n=Object.fromEntries([...'c d ef g a b'].map(Array))[x.toLowerCase()]+(x==x.toUpperCase());
@@ -112,16 +114,19 @@ r : 休符
 					):
 					a.a=0,
 					a
-				),{dt:240/(w[0]>>8)/(w[0]&0xff),s:[]}).s,
+				),{dt:240/(w[0]>>2),s:[]}).s,
 				_=>w.forEach(x=>x())
 			);
 
-		btn.onclick=_=>(
+		btn.onclick=w=>(
 			actx.resume(),
 			stop&&stop(),
-			stop=play(_=parse(Function(`return(${inp.value});`)())),
-			log.textContent=`static const uint16_t PROGMEM sheet[]={\n\t${_.join(',').replace(/,0,/g,',\n\t0,')}\n};`,
-			anc.href='https://mcbeeringi.github.io/apps/qr.html#'+encodeURIComponent(log.textContent)
+			w=Function(`return(${inp.value});`)(),
+			w.notes=parse(w),
+			stop=play(w.notes),
+			w.notes=`static const uint16wt PROGMEM sheet[]={\n\t${w.notes.join(',').replace(/,0,/g,',\n\t0,')}\n};`,
+			log.textContent=w.notes,//JSON.stringify(w,null,'\t'),
+			anc.href='https://mcbeeringi.github.io/apps/qr.html#'+encodeURIComponent(w.notes)
 		);
 		TA.editor(inp);
 		master.gain.value=.2;master.connect(actx.destination);
