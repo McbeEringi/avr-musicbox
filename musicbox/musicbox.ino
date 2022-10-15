@@ -53,6 +53,7 @@ void play(const uint16_t *s){
 		d[MTRKS];// 減衰
 
 	dt=75e5/(h>>2); // 最小音価 31250*240/BPM/minNote
+	FOR(MTRKS)t[i]=0;// 音高を0で初期丘 ノイズ防止
 	while(ntrks<MTRKS){
 		if(pgm_read_word_near(s++)==0){// 0 チャネル先頭
 			if(pgm_read_word_near(s  )==0)break;// 0,0 楽譜終端 離脱
@@ -127,6 +128,7 @@ void setup(){
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
 }
 void loop(){
+	blink(0b01100110);sleep();play(sheet3);// 再生
 	blink(0b01100110);sleep();play(sheet0);// 再生
 	blink(0b01100110);sleep();play(sheet1);// 再生
 	blink(0b01100110);sleep();play(sheet2);// 再生
