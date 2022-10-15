@@ -128,8 +128,8 @@ void setup(){
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
 }
 void loop(){
-	blink(0b01100110);sleep();play(sheet3);// 再生
-	blink(0b01100110);sleep();play(sheet0);// 再生
-	blink(0b01100110);sleep();play(sheet1);// 再生
-	blink(0b01100110);sleep();play(sheet2);// 再生
+	blink(0b01100110);sleep();play(nyan);// 再生
+	blink(0b01100110);sleep();play(yobikomi);// 再生
+	blink(0b01100110);sleep();play(kewpie);// 再生
+	blink(0b01100110);sleep();play(small_world);// 再生
 }

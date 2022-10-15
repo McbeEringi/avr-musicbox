@@ -65,8 +65,8 @@ r : 休符
 , : 新しいパートを作成
 	</pre>
 	<button class="button" id="btn">run</button>
+	<button class="button" id="btn_">stop</button>
 	<pre id="log"></pre>
-	<a id="anc">qr</a>
 	
 	<script type="module">
 		import TA from'https://mcbeeringi.github.io/ta/ta+.mjs';
@@ -85,7 +85,7 @@ r : 休符
 				minNote=1/minNote,
 				[
 					(bpm*minNote<<2)|(lp&0b11),
-					...notes.split(',').flatMap((p,i)=>p.match(/[cdefgabr><]|\d+/ig).reduce((a,x)=>(
+					...notes.replace(/\/\*.*\*\/|\/\/[^\n]*/sg,'').split(',').flatMap((p,i)=>p.match(/[cdefgabr><]|\d+/ig).reduce((a,x)=>(
 						isNaN(x)?({'>':_=>a.o++,'<':_=>a.o--}[x]||(_=>{
 							const n=Object.fromEntries([...'c d ef g a b'].map(Array))[x.toLowerCase()]+(x==x.toUpperCase());
 							a.a+=a.x;
@@ -119,15 +119,17 @@ r : 休符
 			);
 
 		btn.onclick=w=>(
-			actx.resume(),
-			stop&&stop(),
+			btn_.onclick(),
 			w=Function(`return(${inp.value});`)(),
 			w.notes=parse(w),
 			stop=play(w.notes),
-			w.notes=`static const uint16_t PROGMEM sheet[]={\n\t${w.notes.join(',').replace(/,0,/g,',\n\t0,')}\n};`,
-			log.textContent=w.notes,//JSON.stringify(w,null,'\t'),
-			anc.href='https://mcbeeringi.github.io/apps/qr.html#'+encodeURIComponent(w.notes)
+			w.notes=`static const uint16_t PROGMEM sheet[]={\n\t${w.notes.join(',').replace(/,0,/g,',\n\t0,')}\n};\n`,
+			log.textContent=w.notes,
+			location.hash=encodeURIComponent(inp.value)
 		);
+		btn_.onclick=_=>stop&&(stop(),stop=null);
+		addEventListener('visibilitychange',e=>actx.resume());
+		location.hash&&(inp.value=decodeURIComponent(location.hash.slice(1)));
 		TA.editor(inp);
 		master.gain.value=.2;master.connect(actx.destination);
 	</script>
