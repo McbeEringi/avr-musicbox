@@ -124,7 +124,7 @@ r : 休符
 			w=Function(`return(${inp.value});`)(),
 			w.notes=parse(w),
 			stop=play(w.notes),
-			w.notes=`static const uint16wt PROGMEM sheet[]={\n\t${w.notes.join(',').replace(/,0,/g,',\n\t0,')}\n};`,
+			w.notes=`static const uint16_t PROGMEM sheet[]={\n\t${w.notes.join(',').replace(/,0,/g,',\n\t0,')}\n};`,
 			log.textContent=w.notes,//JSON.stringify(w,null,'\t'),
 			anc.href='https://mcbeeringi.github.io/apps/qr.html#'+encodeURIComponent(w.notes)
 		);
