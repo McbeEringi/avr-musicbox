@@ -85,7 +85,7 @@ r : 休符
 				minNote=1/minNote,
 				[
 					(bpm*minNote<<2)|(lp&0b11),
-					...notes.replace(/\/\*[^\*(?=\/)]*\*\/|\/\/[^\n]*/g,'').split(',').flatMap((p,i)=>p.match(/[cdefgabr><]|\d+/ig).reduce((a,x)=>(
+					...notes.replace(/\/\*[^\*(?=\/)]*\*\/|\/\/.*/g,'').split(',').flatMap((p,i)=>p.match(/[cdefgabr><]|\d+/ig).reduce((a,x)=>(
 						isNaN(x)?({'>':_=>a.o++,'<':_=>a.o--}[x]||(_=>{
 							const n=Object.fromEntries([...'c d ef g a b'].map(Array))[x.toLowerCase()]+(x==x.toUpperCase());
 							a.a+=a.x;
