@@ -14,9 +14,9 @@
 </head>
 <body>
 	<style>
-		:root,body,#c{margin:0;width:100%;height:100%;}
-		#panel{position:fixed;width:100%;padding:8px;box-sizing:border-box;background-color:#8882;backdrop-filter:blur(2px);}
-		#panel *,#c{vertical-align:middle;}
+		:root,body,#c{margin:0;width:100%;height:100%;-webkit-user-select:none;user-select:none;touch-action:manipulation;}
+		#panel{position:fixed;top:8px;left:50%;transform:translateX(-50%);padding:8px;border-radius:8px;box-sizing:border-box;text-align:center;letter-spacing:8px;background-color:#8882;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
+		#panel *,#c{vertical-align:middle;}#c{touch-action:pinch-zoom;}
 	</style>
 	<div id="panel">
 		<select id="sel" class="button">
@@ -30,8 +30,13 @@
 	<canvas id="c"></canvas>
 	<script>
 		c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;
-		const ctx=c.getContext('2d');
+		const
+			ctx=c.getContext('2d');
 		ctx.scale(devicePixelRatio,devicePixelRatio);
+
+		c.addEventListener('pointermove',e=>e.preventDefault());
+
+		ontouchstart=_=>_;
 	</script>
 </body>
 </html>
