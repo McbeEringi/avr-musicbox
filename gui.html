@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-	<script async src="https://mcbeeringi.github.io/src/gas.js"></script>
-
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>McbeEringi t85_musicbox gui</title>
@@ -12,7 +10,28 @@
 	<meta name="theme-color" content="#214"/>
 
 	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/style.css">
+	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/toggle.css">
 </head>
 <body>
+	<style>
+		:root,body,#c{margin:0;width:100%;height:100%;}
+		#panel{position:fixed;width:100%;padding:8px;box-sizing:border-box;background-color:#8882;backdrop-filter:blur(2px);}
+		#panel *,#c{vertical-align:middle;}
+	</style>
+	<div id="panel">
+		<select id="sel" class="button">
+			<option value="">select...</option>
+			<option value="">..</option>
+		</select>
+		<input type="checkbox" class="toggle" I="✒️" O="🔏">
+		<button class="button">⏹️</button>
+		<button class="button">⏯️</button>
+	</div>
+	<canvas id="c"></canvas>
+	<script>
+		c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;
+		const ctx=c.getContext('2d');
+		ctx.scale(devicePixelRatio,devicePixelRatio);
+	</script>
 </body>
 </html>
