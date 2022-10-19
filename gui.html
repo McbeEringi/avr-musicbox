@@ -51,7 +51,7 @@
 			));
 			c.addEventListener('pointerup',e=>e.isPrimary&&(cur.z=cur.z_^cur.z,clearTimeout(cur.t),draw()));
 			c.addEventListener('pointercancel',e=>e.isPrimary&&(cur.z=cur.z_^cur.z,clearTimeout(cur.t),draw()));
-
+			draw();
 		}
 		addEventListener('wheel',e=>console.log(e.ctrlKey,e.metaKey,e.shiftKey,e.altKey));
 
