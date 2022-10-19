@@ -15,9 +15,7 @@ void sleep(){
 	DDRB=0;PORTB=1;// PB0:PU
 	GIMSK=0b00100000;// [一般割り込み許可レジスタ] - INT0 PCIE - - - - - : PCIEを設定
 	PCMSK=0b00000001;// [ピン変化割り込み許可レジスタ] - - PCINT5 PCINT4 PCINT3 PCINT2 PCINT1 PCINT0 : PB0を設定
-	set_sleep_mode(SLEEP_MODE_PWR_DOWN);sleep_enable();sleep_cpu();
-	// zzZ...
-	sleep_disable();
+	set_sleep_mode(SLEEP_MODE_PWR_DOWN);sleep_mode();// zzZ...
 	GIMSK=0;// 割り込み解除
 	DDRB=ddrb;PORTB=portb;// ピン復帰
 	while(PB0_PUSHED);WAIT255;// PB0解放待機 チャタリング対策
