@@ -11,13 +11,10 @@
 static const uint16_t t0[]={1911,1804,1703,1607,1517,1432,1351,1276,1204,1136,1073,1012};//C0~B0
 
 void sleep(){
-	uint8_t ddrb=DDRB,portb=PORTB;// ピン設定保存
-	DDRB=0;PORTB=1;// PB0:PU
 	GIMSK=0b00100000;// [一般割り込み許可レジスタ] - INT0 PCIE - - - - - : PCIEを設定
-	PCMSK=0b00000001;// [ピン変化割り込み許可レジスタ] - - PCINT5 PCINT4 PCINT3 PCINT2 PCINT1 PCINT0 : PB0を設定
+	PCMSK=0b00000001;// [ピン変化割り込み許可レジスタ] - - PCINT5 PCINT4 PCINT3 PCINT2 PCINT1 PCINT0 : PB0
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);sleep_mode();// zzZ...
 	GIMSK=0;// 割り込み解除
-	DDRB=ddrb;PORTB=portb;// ピン復帰
 	while(PB0_PUSHED);WAIT255;// PB0解放待機 チャタリング対策
 }
 ISR(PCINT0_vect){}
@@ -32,8 +29,6 @@ void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
 }
 
 void play(const uint16_t *s){
-	DDRB|=0b00011000;// 3,4出力設定
-
 	const uint16_t
 		*p[MTRKS],*_p[MTRKS];// チャネルポインタ ループ用に二重保存
 	uint16_t
@@ -103,14 +98,13 @@ void play(const uint16_t *s){
 		}
 		if(!((h>>1)&0b1)||_x)break;// ループでないまたは再生途中なら
 	}
-
 	OCR1B=0;// PWMリセット
-	DDRB&=~0b00011000;// 3,4出力解除
 }
 
 void setup(){
 	// DDRB PORTB:state, 00:IN_HI-Z, 01:IN_P-UP, 10:OUT_L, 11:OUT_H
-	DDRB  =0;PORTB =1;// [ポートBレジスタ] PB0:PU
+	DDRB  =0b00011000;// [ポートB方向レジスタ] OUT : PB3,4
+	PORTB =0b00000001;// [ポートB出力レジスタ] PU|H: PB0
 	ADCSRA=0;         // [ADC制御レジスタ A] 停止
 
 	TCCR0A=0b00000011;// [タイマー0制御レジスタ A] COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 : 高速PWM
