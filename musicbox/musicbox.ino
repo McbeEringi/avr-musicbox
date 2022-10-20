@@ -11,19 +11,20 @@
 static const uint16_t t0[]={1911,1804,1703,1607,1517,1432,1351,1276,1204,1136,1073,1012};//C0~B0
 
 void sleep(){
-	GIMSK=0b00100000;// [一般割り込み許可レジスタ] - INT0 PCIE - - - - - : PCIEを設定
+	const uint8_t ocr1b=OCR1B;
+	OCR1B=0;// PWM停止
+	GIMSK=0b00100000;// [一般割り込み許可レジスタ] - INT0 PCIE - - - - - : PCIE
 	PCMSK=0b00000001;// [ピン変化割り込み許可レジスタ] - - PCINT5 PCINT4 PCINT3 PCINT2 PCINT1 PCINT0 : PB0
 	set_sleep_mode(SLEEP_MODE_PWR_DOWN);sleep_mode();// zzZ...
-	GIMSK=0;// 割り込み解除
+	GIMSK=0;PCMSK=0;// 割り込み解除
 	while(PB0_PUSHED);WAIT255;// PB0解放待機 チャタリング対策
-}
-ISR(PCINT0_vect){}
+	OCR1B=ocr1b;// PWM復帰
+}ISR(PCINT0_vect){}
 
 void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
-	static const uint8_t mask=0b00000110;
 	for(uint8_t i=0;i<8;i++){
-		if((x>>i)&0x1){DDRB=(~mask&DDRB)|(mask&0b00000110);PORTB=(~mask&PORTB)|(mask&0b00000010);}//1:H, 2:L
-		else{DDRB=(~mask&DDRB)|(mask&0b00000000);PORTB=(~mask&PORTB)|(mask&0b00000000);}//1:Z, 2:Z
+		if((x>>i)&0x1)PORTB|=0b10;//1:H
+		else PORTB=~0b10;//1:L
 		for(uint16_t j=31250>>4;j>0;j--)WAIT// 1/16秒
 	}
 }
@@ -103,7 +104,7 @@ void play(const uint16_t *s){
 
 void setup(){
 	// DDRB PORTB:state, 00:IN_HI-Z, 01:IN_P-UP, 10:OUT_L, 11:OUT_H
-	DDRB  =0b00011000;// [ポートB方向レジスタ] OUT : PB3,4
+	DDRB  =0b00011110;// [ポートB方向レジスタ] OUT : PB1,2,3,4
 	PORTB =0b00000001;// [ポートB出力レジスタ] PU|H: PB0
 	ADCSRA=0;         // [ADC制御レジスタ A] 停止
 
@@ -112,7 +113,7 @@ void setup(){
 	OCR0A =F_CPU/25e4;// [タイマー0レジスタA] 基準クロック 25e4/8=31.25kHz 32us
 
 	TCCR1 =0b00000001;// [タイマー1制御レジスタ A] CTC1 PWM1A COM1A1 COM1A0 CS13 CCS12 CS11 CS10 : 分周無し
-	GTCCR =0b01010000;// [タイマー1制御レジスタ B] TSM PWM1B COM1B1 COM1B0 FOC1B FOC1A PSR1 PSR0 : PWM1B PB3有効
+	GTCCR =0b01100000;// [タイマー1制御レジスタ B] TSM PWM1B COM1B1 COM1B0 FOC1B FOC1A PSR1 PSR0 : PWM1B PB4のみ有効
 	PLLCSR=0b00000111;// [PLL制御状態レジスタ] LSM - - - - PCKE PLLE PLOCK : 通常動作, PCK PLL Plock許可 64MHz動作
 	OCR1B=0;OCR1C=255;// [タイマー1レジスタBC] 64e6/255≒250kHz動作
 
