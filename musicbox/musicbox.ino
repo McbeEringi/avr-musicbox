@@ -23,8 +23,8 @@ void sleep(){
 
 void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
 	for(uint8_t i=0;i<8;i++){
-		if((x>>i)&0x1)PORTB|=0b10;//1:H
-		else PORTB=~0b10;//1:L
+		if((x>>i)&0b1)PORTB|=0b10;//1:H
+		else PORTB&=~0b10;//1:L
 		for(uint16_t j=31250>>4;j>0;j--)WAIT// 1/16秒
 	}
 }
@@ -47,7 +47,7 @@ void play(const uint16_t *s){
 		d[MTRKS];// 減衰
 
 	dt=75e5/(h>>2); // 最小音価 31250*240/BPM/minNote
-	FOR(MTRKS)t[i]=0;// 音高を0で初期丘 ノイズ防止
+	FOR(MTRKS)t[i]=0;// 音高を0で初期化 ノイズ防止
 	while(ntrks<MTRKS){
 		if(pgm_read_word_near(s++)==0){// 0 チャネル先頭
 			if(pgm_read_word_near(s  )==0)break;// 0,0 楽譜終端 離脱
@@ -67,12 +67,12 @@ void play(const uint16_t *s){
 
 		while(_x){
 			if(--_dt<ntrks){// 最小音価カウンタが終了に近づいたら
-				if(x[_dt]&&(!l[_dt]--)){// 前の音符が存在かつ終了したら
+				if(x[_dt]&&!l[_dt]--){// 前の音符が存在かつ終了したら
 					x[_dt]=pgm_read_word_near(_p[_dt]++);// PROGMEM読込
 					v[_dt]=0xff>>(x[_dt]>>15);// 音量
 					w[_dt]=(x[_dt]>>14)&0b1;// 波形
 					d[_dt]=(x[_dt]>>13)&0b1;// 減衰
-					t[_dt]=((x[_dt]>>6)&0b1111)>0b1011?0:t0[(x[_dt]>>6)&0b1111]>>((x[_dt]>>10)&0b111);// オクターブ3bit 音高4bit(12以上は休符)
+					t[_dt]=(!x[_dt]||((x[_dt]>>6)&0b1111)>0b1011)?0:t0[(x[_dt]>>6)&0b1111]>>((x[_dt]>>10)&0b111);// オクターブ3bit 音高4bit(12以上は休符)
 					l[_dt]=x[_dt]&0b111111;// 音価6bit
 
 					_t[_dt]=0;// 波形生成用カウンタ初期化
@@ -122,8 +122,8 @@ void setup(){
 }
 void loop(){
 	blink(0b01100110);sleep();play(sanpo);// 再生
-	blink(0b01100110);sleep();play(nyan);// 再生
-	blink(0b01100110);sleep();play(yobikomi);// 再生
-	blink(0b01100110);sleep();play(kewpie);// 再生
-	blink(0b01100110);sleep();play(small_world);// 再生
+	blink(0b01100110);sleep();play(nyan);
+	blink(0b01100110);sleep();play(yobikomi);
+	blink(0b01100110);sleep();play(kewpie);
+	blink(0b01100110);sleep();play(small_world);
 }
