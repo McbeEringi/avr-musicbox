@@ -103,11 +103,6 @@ void play(const uint16_t *s){
 }
 
 void setup(){
-	// DDRB PORTB:state, 00:IN_HI-Z, 01:IN_P-UP, 10:OUT_L, 11:OUT_H
-	DDRB  =0b00011110;// [ポートB方向レジスタ] OUT : PB1,2,3,4
-	PORTB =0b00000001;// [ポートB出力レジスタ] PU|H: PB0
-	ADCSRA=0;         // [ADC制御レジスタ A] 停止
-
 	TCCR0A=0b00000011;// [タイマー0制御レジスタ A] COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 : 高速PWM
 	TCCR0B=0b00001010;// [タイマー0制御レジスタ B] FOC0A FOC0B - - WGM02 CS02 CS01 CS00 : 高速PWM 1/8分周
 	OCR0A =F_CPU/25e4;// [タイマー0レジスタA] 基準クロック 25e4/8=31.25kHz 32us
@@ -117,7 +112,11 @@ void setup(){
 	PLLCSR=0b00000111;// [PLL制御状態レジスタ] LSM - - - - PCKE PLLE PLOCK : 通常動作, PCK PLL Plock許可 64MHz動作
 	OCR1B=0;OCR1C=255;// [タイマー1レジスタBC] 64e6/256=250kHz動作
 
-	TIMSK =0b00000000;// [タイマー割り込み許可レジスタ] - OCIE1A OCIE1B OCIE0A OCIE0B TOIE1 TOIE0 : 無効
+	// DDRB PORTB:state, 00:IN_HI-Z, 01:IN_P-UP, 10:OUT_L, 11:OUT_H
+	DDRB  =0b00011110;// [ポートB方向レジスタ] OUT : PB1,2,3,4
+	PORTB =0b00000001;// [ポートB出力レジスタ] PU|H: PB0
+	ADCSRA=0;         // [ADC制御レジスタ A] 停止
+	TIMSK =0;         // [タイマー割り込み許可レジスタ] 無効
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
 }
 void loop(){
