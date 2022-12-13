@@ -107,7 +107,7 @@ void play(const uint16_t *s){
 	OCR1B=0;// PWMリセット
 }
 
-void setup(){
+void main(){
 	TCCR0A=0b00000011;// [タイマー0制御レジスタ A] COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 : 高速PWM
 	TCCR0B=0b00001010;// [タイマー0制御レジスタ B] FOC0A FOC0B - - WGM02 CS02 CS01 CS00 : 高速PWM 1/8分周
 	OCR0A =F_CPU/25e4;// [タイマー0レジスタA] 基準クロック 25e4/8=31.25kHz 32us
@@ -123,12 +123,11 @@ void setup(){
 	ADCSRA=0;         // [ADC制御レジスタ A] 停止
 	TIMSK =0;         // [タイマー割り込み許可レジスタ] 無効
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
+	while(1){
+		blink(0b01100110);sleep();play(sanpo);// 再生
+		blink(0b01100110);sleep();play(nyan);
+		blink(0b01100110);sleep();play(yobikomi);
+		blink(0b01100110);sleep();play(kewpie);
+		blink(0b01100110);sleep();play(small_world);
+	}
 }
-void loop(){
-	blink(0b01100110);sleep();play(sanpo);// 再生
-	blink(0b01100110);sleep();play(nyan);
-	blink(0b01100110);sleep();play(yobikomi);
-	blink(0b01100110);sleep();play(kewpie);
-	blink(0b01100110);sleep();play(small_world);
-}
-void main(){setup();while(1)loop();}
