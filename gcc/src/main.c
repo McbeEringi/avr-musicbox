@@ -1,4 +1,9 @@
-#define F_CPU 8000000// 8MHz
+#define DIGISPARK
+#ifdef DIGISPARK
+	#define F_CPU 16500000// 16.5MHz
+#else
+	#define F_CPU 8000000// 8MHz
+#endif
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
@@ -20,7 +25,7 @@ void sleep(){
 	OCR1B=0;// PWM停止
 	GIMSK=0b00100000;// [一般割り込み許可レジスタ] - INT0 PCIE - - - - - : PCIE
 	PCMSK=0b00000001;// [ピン変化割り込み許可レジスタ] - - PCINT5 PCINT4 PCINT3 PCINT2 PCINT1 PCINT0 : PB0
-	set_sleep_mode(SLEEP_MODE_PWR_DOWN);sleep_mode();// zzZ...
+	sei();set_sleep_mode(SLEEP_MODE_PWR_DOWN);sleep_mode();cli();// zzZ...
 	GIMSK=0;PCMSK=0;// 割り込み解除
 	while(PB0_PUSHED);WAIT255;// PB0解放待機 チャタリング対策
 	OCR1B=ocr1b;// PWM復帰
