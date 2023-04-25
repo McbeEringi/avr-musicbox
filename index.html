@@ -13,10 +13,10 @@
 </head>
 <body>
 	<style>
-		.input{font-family:monospace;width:100%;white-space:pre;}
+		textarea{font-family:monospace;width:100%;white-space:pre;}
 		pre{white-space:pre-wrap;word-break:break-all;}
 	</style>
-	<textarea class="input" id="inp" spellcheck="false">{
+	<textarea class="zab" id="inp" spellcheck="false">{
 	bpm:80,// テンポ
 	minNote:1/16,// 音符の最小単位
 	// ループ_ポーズ (どちらも1にすると複数曲再生ができなくなる)
@@ -41,8 +41,8 @@ r : 休符
 < : 1オクターブ下げる
 , : 新しいパートを作成
 	</pre>
-	<button class="button" id="btn">run</button>
-	<button class="button" id="btn_">stop</button>
+	<button class="zab bgca" id="btn">run</button>
+	<button class="zab bgca" id="btn_">stop</button>
 	<pre id="log"></pre>
 	
 	<script type="module">
