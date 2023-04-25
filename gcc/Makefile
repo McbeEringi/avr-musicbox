@@ -13,6 +13,7 @@ SRCS:=$(addprefix src/,$(SRCS))
 
 $(TARGET).hex: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET).out
+	avr-size $(TARGET).out
 	avr-objcopy -F ihex $(TARGET).out $(TARGET).hex
 
 tmp/%.o: src/%.c $(HEDS)
