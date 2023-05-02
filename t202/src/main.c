@@ -6,6 +6,9 @@
 #include <avr/sleep.h>
 #include "seq.h"
 
+#define WAIT5 for(uint8_t i=200;i>0;i--)WAIT// 5ms
+#define WAIT {while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=TCB_CAPT_bm;}// TCB0待ち(25us) 強制解除
+
 void sleep(){
 	sei();
 	SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;// avr/sleep.hが仕事しないので
@@ -13,6 +16,12 @@ void sleep(){
 	SLPCTRL.CTRLA=0;
 	cli();
 }ISR(PORTA_PORT_vect){}
+void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
+	for(uint8_t i=0;i<8;i++){
+		if((x>>i)&1)PORTA.OUTSET=1<<LED_BUILTIN;else PORTA.OUTCLR=1<<LED_BUILTIN;
+		for(uint16_t j=2500;j>0;j--)WAIT// 1/16秒
+	}
+}
 
 void main(){
 	// TCA0 疑似DAC 可能な限り高速な方が良い 20MHz/(8bit=2**8)=78.125kHz
@@ -30,6 +39,6 @@ void main(){
 	PORTA.DIRSET=0b1100;// 出力: PA3,2
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_RISING_gc;// PA7 プルアップ 離したら割り込み
 	while(1){
-
+		blink(0b00110011);
 	}
 }
