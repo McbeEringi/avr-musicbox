@@ -10,7 +10,7 @@
 		0b0_1_1
 	],
 	notes:`
-		&gt;1ar4a1brarFr2ar
+		>1ar4a1brarFr2ar
 		1ar4a1brarFr2ar
 		1drdrdrer5F1rdr
 		5F1rar8a
@@ -18,21 +18,21 @@
 		1drdrdrer8F
 		1erererdr2erFrargrFrer,
 
-		&lt;2r
+		<2r
 		1a3r1a3r1aa2r1a3r1a3r1a3r1aa2r1a3r
 		1b3r1b3r1bb2r1b3r1b3r1b3r1bb2r1b3r
 		1b3r1b3r1bb2r1b3r1b3r1b3r1bb2r1b3r
 		1a3r1a3r1aa2r1a3r1a3r1a3r1aa2ra,
 
-		&lt;2r
+		<2r
 		1F3r1F3r1FF2r1F3r1F3r1F3r1FF2r1F3r
 		1F3r1F3r1FF2r1F3r1F3r1F3r1FF2r1F3r
 		1g3r1g3r1gg2r1g3r1g3r1g3r1gg2r1g3r
 		1e3r1e3r1ee2r1e3r1e3r1e3r1ee2re,
 
-		&lt;4d&lt;a&gt;d&lt;a&gt;d&lt;a&gt;3d&lt;1a&gt;2dC&lt;
+		<4d<a>d<a>d<a>3d<1a>2dC<
 		4bFbFbF3b1F2ba
-		4gdg&gt;d&lt;gd2gdgb
-		4aeaeae&gt;2C&lt;b4a
+		4gdg>d<gd2gdgb
+		4aeaeae>2C<b4a
 	`
 })
