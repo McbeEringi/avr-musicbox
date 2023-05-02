@@ -1,27 +1,28 @@
 #define F_CPU 20000000
-#define LED_BUILTIN 3
-#define BTN_BUILTIN 7
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include "seq.h"
+#define LED_BUILTIN 3
+#define BTN_BUILTIN 7
 
+#define WAIT_BTN while(BTN_DOWN);WAIT_5
 #define BTN_DOWN ~VPORTA.IN&(1<<7)
 #define WAIT_5 for(uint8_t i=0;i<200;i++)WAIT// 5ms
 #define WAIT do{while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=TCB_CAPT_bm;}while(0)// TCB0待ち(25us) 解除
 
-void sleep(){
-	sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;// avr/sleep.hが仕事しないので
-	sleep_cpu();// ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない
-	SLPCTRL.CTRLA=0;cli();
-	while(BTN_DOWN);WAIT_5;
-}ISR(PORTA_PORT_vect){PORTA.INTFLAGS=PORT_INT7_bm;}
+void sleep(){sei();sleep_cpu();cli();WAIT_BTN;}// ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない
+ISR(PORTA_PORT_vect){PORTA.INTFLAGS=PORT_INT7_bm;}
 
 void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
 	for(uint8_t i=0;i<8;i++){
 		if((x>>i)&1)PORTA.OUTSET=1<<LED_BUILTIN;else PORTA.OUTCLR=1<<LED_BUILTIN;
 		for(uint16_t j=0;j<2500;j++)WAIT;// 1/16秒
 	}
+}
+
+void play(const uint8_t *w){
+
 }
 
 
@@ -40,6 +41,7 @@ void main(){
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
 	PORTA.DIRSET=0b1100;// 出力: PA3,2
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ LOWで割り込み 
+	SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;// avr/sleep.hが仕事しないので
 	while(1){
 		blink(0b01001001);sleep();
 	}
