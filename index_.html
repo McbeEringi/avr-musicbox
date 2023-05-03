@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>McbeEringi t202_musicbox mml</title>
+	<meta name="description" content="mml for t85_musicbox">
+	<link rel="icon" type="image/svg+xml" href="https://mcbeeringi.github.io/img/icon.svg">
+	<link rel="apple-touch-icon" href="https://mcbeeringi.github.io/img/icon.png">
+	<meta name="theme-color" content="#214"/>
+
+	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/style.css">
+</head>
+<body>
+	<style>
+		#ta{width:100%;font-family:monospace;tab-size:2;}
+	</style>
+	<textarea id="ta" class="zab" spellcheck="false">{
+	header:{
+		tps:(({bpm:a,min_note:b})=>a*b/240)({bpm:120,min_note:16}),
+		loop:false,
+	},
+	tracks:[
+		{
+			wave:[3,3,0,0],
+			envelope:true,
+			tick_div:Math.log2(1)|0,
+			octave:0,
+			notes:[
+				[4,3],[4,5],[4,7]
+			]
+		}
+	]
+}</textarea>
+	<button id="pbtn" class="zab bgca">play</button>
+	
+	<script type="module">
+		import TA from'https://mcbeeringi.github.io/ta/ta+.mjs';
+		location.hash&&(ta.value=decodeURIComponent(location.hash.slice(1)));
+		TA.editor(ta);
+
+		const
+		actx=new(window.AudioContext||webkitAudioContext)(),
+		fft=w=>((
+			n=[...Array(Math.log2(w.length))],br=x=>n.reduce((a,_,i)=>(a<<1)|(x>>>i&1),0),trs=x=>x[0].map((_,i)=>x.map(y=>y[i])),
+			pm=(a,b,[c,d])=>[[a+c,b+d],[a-c,b-d]],mul=(a,b,c,d)=>[a*c-b*d,a*d+b*c],core=([a,b],[c,d],t)=>pm(a,b,mul(c,d,Math.cos(t*=-Math.PI),Math.sin(t)))
+		)=>trs(n.reduce((a,x,i)=>(x=2**i,[...Array(a.length/2)].forEach((_,j)=>[a[i+j],a[i+j+x]]=core(a[(i=(j/x|0)*x*2)+(j%=x)],a[i+j+x],j/x)),a),w.map((_,i)=>[w[br(i)],0]))))(),
+		pwav=w=>actx.createPeriodicWave(...fft(w.flatMap(x=>Array(4096/w.length).fill(x*2-1))).map(x=>new Float32Array([0,...x.slice(1)])));
+
+		pbtn.onclick=s=>(
+			s=Function('return '+ta.value)(),
+			console.log(s),
+			s.tracks.forEach(w=>(
+				w.wave=pwav(w.wave.map(x=>x/3)),console.log(w.wave),
+				w.notes.reduce((a,x)=>(
+					isNaN(x[1])||((osc=actx.createOscillator(),g=actx.createGain())=>(
+						osc.frequency.value=440*2**(x[1]/12+w.octave),
+						osc.setPeriodicWave(w.wave),
+						w.envelope&&(g.gain.setTargetAtTime(.01,a.rt(),.2)),
+						[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
+						osc.start(a.rt()),osc.stop(a.rt(a.t+x[0]))
+					))(),
+					a.t+=x[0],
+					a
+				),{t:0,rt0:actx.currentTime,rt(t=this.t){return this.rt0+t*2**w.tick_div/s.header.tps;}})
+			))
+		);
+	</script>
+</body>
+</html>
