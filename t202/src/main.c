@@ -108,6 +108,6 @@ void main(){
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ LOWで割り込み 
 	
 	while(1){
-		blink(0b01111111);sleep();
+		blink(0b00110011);sleep();play(yobikomi);
 	}
 }
