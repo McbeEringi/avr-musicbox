@@ -34,6 +34,7 @@
 }</textarea>
 	<button id="pbtn" class="zab bgca">play</button><br>
 	<canvas id="c" width="1024" height="512"></canvas>
+	<pre id="log"></pre>
 	
 	<script type="module">
 		import TA from'https://mcbeeringi.github.io/ta/ta+.mjs';
@@ -77,8 +78,19 @@
 					))(),
 					a.t+=x[0],
 					a
-				),{t:0,rt0:actx.currentTime,rt(t=this.t){return this.rt0+t*2**w.tick_div/s.header.tps;}})
-			))
+				),{t:0,rt0:actx.currentTime,rt(t=this.t){return this.rt0+t*2**w.tick_div/(s.header.bpm/s.header.min_note)*240;}})
+			)),
+			s.la=[255,...new Set(Function('return'+ta.value)().tracks.flatMap(x=>x.notes.map(y=>y[0])).sort((a,b)=>a-b))],
+			s.l=s.la.reduce((a,x,i)=>(a[x]=i,a),{}),
+
+			log.textContent=`${s.header.bpm/s.header.min_note>>5},${((s.header.bpm/s.header.min_note<<3)&0b11111)|!!s.header.loop<<2},
+${s.la},\n`+s.tracks.map(x=>[
+	0,
+	x.wave[0]<<6|x.wave[1]<<4|x.wave[2]<<2|x.wave[3],
+	x.wave[4]<<6|x.wave[5]<<4|x.wave[6]<<2|x.wave[7],
+	(x.tick_div&3)<<6|((x.octave+2)&3)<<4|!!x.envelope<<3|!!x.noise<<2,
+	...x.notes.map(x=>(s.l[x[0]]<<5|(isNaN(x[1])?0:x[1]+16)))
+].join(',')).join(',\n')+',\n0,0'
 		);
 		draw();
 	</script>
