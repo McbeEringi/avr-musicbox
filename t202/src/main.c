@@ -8,11 +8,11 @@
 #define BTN_BUILTIN 7
 #define MTRKS 4
 
-#define FOR(X) for(uint8_t i=0;i<X;i++)
 #define WAIT_BTN while(BTN_DOWN)WAIT_5
 #define BTN_DOWN ~VPORTA.IN&(1<<7)
-#define WAIT_5 for(uint8_t i=0;i<200;i++)WAIT// 5ms
+#define WAIT_5 FOR(200)WAIT// 5ms
 #define WAIT do{while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=TCB_CAPT_bm;}while(0)// TCB0待ち(25us) 解除
+#define FOR(X) for(uint8_t i=0;i<X;i++)
 #define _OUT OUT(3)OUT(2)OUT(1)OUT(0)
 #define OUT(I) +((_t[I]=(++_t[I]==t[I]?0:_t[I]))<(t[I]>>1)?v[I]>>2:0)// 各トラック1/4にして合成 矩形波
 
@@ -22,7 +22,7 @@ void sleep(){sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;sleep_cpu
 ISR(PORTA_PORT_vect){PORTA.INTFLAGS=PORT_INT7_bm;}// ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない リセット必須
 
 void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
-	for(uint8_t i=0;i<8;i++){
+	FOR(8){
 		if((x>>i)&1)PORTA.OUTSET=1<<LED_BUILTIN;else PORTA.OUTCLR=1<<LED_BUILTIN;
 		for(uint16_t j=0;j<2500;j++)WAIT;// 1/16秒
 	}
