@@ -18,7 +18,7 @@ ISR(PORTA_PORT_vect){PORTA.INTFLAGS=PORT_INT7_bm;}// ピン割り込みはBOTHED
 
 void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
 	FOR(8){
-		if((x>>i)&1)PORTA.OUTSET=0b100;else PORTA.OUTCLR=0b100;
+		if((x>>i)&1)PORTA.OUTSET=0b1000;else PORTA.OUTCLR=0b1000;
 		for(uint16_t j=0;j<2500;j++)WAIT;// 1/16秒
 	}
 }
