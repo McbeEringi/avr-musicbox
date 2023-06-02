@@ -1,5 +1,5 @@
 TARGET:=main
-HEDS:=
+HEDS:=seq.h
 SRCS:=main.c
 CC:=avr-gcc
 CFLAGS:=-Os -mmcu=attiny202

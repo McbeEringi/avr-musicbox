@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>McbeEringi t85_musicbox gui</title>
-	<meta name="description" content="gui for t85_musicbox">
+	<title>McbeEringi t85_musicbox mml</title>
+	<meta name="description" content="mml for t85_musicbox">
 	<link rel="icon" type="image/svg+xml" href="https://mcbeeringi.github.io/img/icon.svg">
 	<link rel="apple-touch-icon" href="https://mcbeeringi.github.io/img/icon.png">
 	<meta name="theme-color" content="#214"/>
@@ -13,13 +13,36 @@
 </head>
 <body>
 	<style>
-		*{font-family:monospace !important;}
-		#wrap{overflow:auto;}
+		textarea{font-family:monospace;width:100%;white-space:pre;}
+		pre{white-space:pre-wrap;word-break:break-all;}
 	</style>
-	<button class="button" id="btn">▶️</button>
-	<button class="button" id="btn_">⏹️</button>
-	<label>1tick=<input type="text" id="tickinp" class="input">sec</label>
-	<div id="wrap"></div>
+	<textarea class="zab" id="inp" spellcheck="false">{
+	bpm:80,// テンポ
+	minNote:1/16,// 音符の最小単位
+	// ループ_ポーズ (どちらも1にすると複数曲再生ができなくなる)
+	lp:0b0_0,
+	vwd:[// 音量半分_音色_減衰無効化
+		0b0_0_0,
+		0b0_0_0,
+		0b0_0_0,
+		0b0_0_0
+	],
+	notes:`
+		//ここに書く
+		&gt;2Fd&lt;a&gt;de6a2eFe&lt;a&gt;8d,
+		rF&gt;6C2&lt;e4aa8F
+	`
+}</textarea>
+	<pre>
+cdefgab : ドレミファソラシ (大文字で♯)
+r : 休符
+1から16 : 音符(休符)の長さを更新 (デフォルトは4) (最小単位の{数字}倍)
+> : 1オクターブ上げる
+< : 1オクターブ下げる
+, : 新しいパートを作成
+	</pre>
+	<button class="zab bgca" id="btn">run</button>
+	<button class="zab bgca" id="btn_">stop</button>
 	<pre id="log"></pre>
 	
 	<script type="module">

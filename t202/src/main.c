@@ -11,28 +11,62 @@
 #define WAIT do{while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=TCB_CAPT_bm;}while(0)// TCB0待ち(25us) 解除
 #define FOR(X) for(uint8_t i=0;i<X;i++)
 
-const uint16_t t0[]={2446,2309,2179,2057,1942,1833,1730,1633,1541,1455,1373,1296};// C0~B0
+const uint16_t n0[]={2446,2309,2179,2057,1942,1833,1730,1633,1541,1455,1373,1296};// C0~B0
 
-void sleep(){uint8_t d=VPORTA.DIR;VPORTA.DIR=0;sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;sleep_cpu();cli();WAIT_BTN;VPORTA.DIR=d;}// avr/sleep.hが仕事しないので手動設定
+static void sleep(){uint8_t d=VPORTA.DIR;VPORTA.DIR=0;sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;sleep_cpu();cli();WAIT_BTN;VPORTA.DIR=d;}// avr/sleep.hが仕事しないので手動設定
 ISR(PORTA_PORT_vect){PORTA.INTFLAGS=PORT_INT7_bm;}// リセット必須
 
-void blink(uint8_t x){FOR(8){// 下位bitから読み込み MSBの状態のまま離脱
-	if((x>>i)&1)PORTA.OUTSET=0b1000;else PORTA.OUTCLR=0b1000;
-	for(uint16_t j=0;j<2500;j++)WAIT;// 1/16秒
-}}
+static void blink(uint8_t x){FOR(8){if((x>>i)&1)PORTA.OUTSET=0b1000;else PORTA.OUTCLR=0b1000;for(uint16_t j=0;j<2500;j++)WAIT;}}// 下位bitから読み込み MSBの状態のまま離脱 1/16秒*8
 
-void play(){
-	uint16_t t[3]={76,61,51},_t[3]={0,0,0};//C5,E5,G5
-	for(uint16_t i=0;i<-1;i++){
-		TCA0.SINGLE.CMP2=
-		((_t[0]=(++_t[0]==t[0]?0:_t[0]))<(t[0]>>1)?255>>2:0)+
-		((_t[1]=(++_t[1]==t[1]?0:_t[1]))<(t[1]>>1)?255>>2:0)+
-		((_t[2]=(++_t[2]==t[2]?0:_t[2]))<(t[2]>>1)?255>>2:0);
-		WAIT;
+static void play(const uint8_t *s){
+	static const uint8_t
+	*p[MTRKS],*_p[MTRKS];// チャネルポインタ ループ用に二重保存
+	static uint8_t
+	t[MTRKS<<1]={},_t[MTRKS],// 音価
+	cfg[MTRKS]={},_v[MTRKS],// 設定項目 音量
+	ntrks=0,// 有効トラック数
+	out;
+	uint16_t
+	h=(*s++<<8)|(*s++),// ヘッダ
+	n[MTRKS]={},_n[MTRKS],// 音高
+	env,// 減衰カウンタ
+	dt=96e5/(h>>3),_dt;// 最小音価 40000*240/BPM/minNote
+
+	while(ntrks<MTRKS){if(*s++==0){if(*s==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
+	while(1){
+		_dt=ntrks;env=1;FOR(ntrks){_p[i]=p[i];_t[i]=0;}// 初期化
+		while(1){
+			if(--_dt<ntrks){
+				if(*_p[_dt]&&!_t[_dt]--){
+					while(!(*_p[_dt]&0x80)){
+						if(*_p[_dt]>>6==1)t[(_dt<<1)|((*_p[_dt]>>5)&1)]=*_p[_dt]&0x1f;// 音価メモリ変更
+						else if(*_p[_dt]>>5==1)cfg[_dt]=*_p[_dt]&0x1f;// 設定項目変更
+						else if(*_p[_dt]==1)goto dc;// 終了フラグ
+						_p[_dt]++;
+					}
+					_t[_dt]=t[(_dt<<1)|((*_p[_dt]>>6)&1)];// 音価1bit(5bit)
+					n[_dt]=(*_p[_dt]&0xf)>11?0:n0[*_p[_dt]&0xf]>>(((*_p[_dt]>>4)&3)+3);// オクターブ2bit 音高4bit
+					_n[_dt]=0;// 波形カウンタリセット
+					_v[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
+					_p[_dt]++;
+				}
+				if(!_dt)_dt=dt;
+			}
+			out=0;
+			FOR(ntrks){// 矩形波合成 1/4
+				if(++_n[i]==n[i])_n[i]=0;
+				if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=_v[i]>>2;
+			}
+			TCA0.SINGLE.CMP2BUF=out;
+			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=384;}// 減衰 9.6ms毎
+			if(BTN_DOWN)goto fin;// ボタン離脱
+			WAIT;
+		}
+		dc:if(!(h>>2))break;// ループ
 	}
-	TCA0.SINGLE.CMP2=0;
+	fin:TCA0.SINGLE.CMP2BUF=0;
+	WAIT_BTN;
 }
-
 
 void main(){
 	// TCA0 疑似DAC 可能な限り高速な方が良い 20MHz/(8bit=2**8)=78.125kHz
@@ -48,8 +82,8 @@ void main(){
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
 	PORTA.DIRSET=0b1100;// 出力: PA3,2
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない 
-	
+
 	while(1){
-		blink(0b00110011);sleep();play();//play(yobikomi);
+		blink(0b00110011);sleep();play(famima);
 	}
 }

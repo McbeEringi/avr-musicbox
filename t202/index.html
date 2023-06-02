@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>McbeEringi t202_musicbox mml</title>
+	<meta name="description" content="mml for t202_musicbox">
+	<link rel="icon" type="image/svg+xml" href="https://mcbeeringi.github.io/img/icon.svg">
+	<link rel="apple-touch-icon" href="https://mcbeeringi.github.io/img/icon.png">
+	<meta name="theme-color" content="#214"/>
+
+	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/style.css">
+	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/comp.css">
+</head>
+<body>
+<style>textarea{width:100%;}pre{overflow:auto;}</style>
+<textarea id="ta" class="zab" spellcheck="false"></textarea>
+<pre>
+tpm(tickPerMinute)=BPM/minNote;
+
+x000 : パート設定(音量半分?1bit,1/8パルス?1bit,減衰なし?1bit)(初期値000)
+> : オクターブ上げ(初期値4)
+< : オクターブ下げ
+t : 音価メモリ0セット(初期値)
+T : 音価メモリ1セット
+1~32 : 音価セット
+cdefgab : 音名(大文字半音上げ)
+r : 休符
+, : パート分け
+</pre>
+<button id="btn" class="zab bgca">run</button>
+<button class="zab bgca" onclick="location.hash='';">clear</button>
+<pre id="log"></pre>
+<script type="module">
+	import TA from'https://mcbeeringi.github.io/ta/ta+.mjs';
+	location.hash&&(ta.value=decodeURIComponent(location.hash.slice(1)));
+	!ta.value&&(ta.value=`{
+	title:'famima',
+	tpm:80*8,
+	loop:true,
+	notes:\`
+		x000
+		>1Fd<a>deT3ateFe<a>4d,
+		x000
+		2rF>T3C1<etaa4F
+	\`
+}`);
+	TA.editor(ta);
+	btn.onclick=w=>(
+		location.hash=encodeURIComponent(ta.value),
+		w=Function('return '+ta.value)(),
+		w.notes=w.notes.split(',').map(_=>(_.match(/[<>a-gr]|\d+|x\d{3}|t/ig)||[]).reduce((a,x)=>(
+			(isNaN(x)?{
+				'<':_=>a.o--,'>':_=>a.o++,
+				...[...'c_d_ef_g_a_br'].reduce((b,y,i)=>(b[y]=_=>(a.ta+=a.t[a.ti],a.a.push(1<<7|a.ti<<6|(a.o&3)<<4|i+(x==x.toUpperCase()))),b),{}),
+				t:_=>a.ti=+(x=='T'),x:_=>a.a.push(+('0b00100'+x.slice(-3)))
+			}[x.slice(0,1).toLowerCase()]:(_=>(a.t[a.ti]=+x,a.a.push(1<<6|a.ti<<5|(+x-1)&0x1f))))(),
+			a
+		),{a:[],o:1,t:[0,0],ti:0,ta:0})),
+		w.notes[w.notes.reduce((a,x,i)=>(x.ta<a.a||(a.a=x.ta,a.i=i),a),{a:0,i:-1}).i].a.push(1),
+		log.textContent=`const uint8_t ${w.title}[]={\n\t${(w.tpm>>5)&0xff},${(((w.tpm<<1)|(!!w.loop))<<2)&0xff},${w.notes.map(x=>'\n\t0,'+x.a)+','}\n\t0,0\n};\n`,
+
+		log.textContent.match(/\b\d+/g).map(x=>+x)
+	);
+</script>
+</body>
+</html>

@@ -1,21 +1,26 @@
 # avr_musicbox
-avr-gcc製の電子オルゴール
-## 対応チップ
-### t85_musicbox
-- ATTiny85
-- 4チャネルの矩形波
-- 設定可能項目
-	- 減衰の有無
-	- 音量(1bit)
-	- パルス幅(1:1, 3:1)
-	- ループ
-	- ボタン機能(停止, 一時停止)
+avrマイコンとスピーカだけで作れる和音再生可能な電子オルゴール
 
-### t202_musicbox
-WIP
-- ATTiny202
-- 省容量フォーマット
-	- 1音符1byte
+[GitHub](https://github.com/mcbeeringi/avr_musicbox/)
+## 機能
+- avrとスピーカーの直結可
+- 4ch矩形波
+- 楽譜毎にループ機能
+- チャンネル毎に設定可能
+	- 減衰の有無
+	- パルス幅(1:1, 3:1)
+	- 音量(1bit)
+
+## 対応AVR
+- ATTiny85(t85)
+	- 楽譜サイズが小さければt45も可
+- ATTiny202(t202)
+	- t402も可
 
 ## 譜面作成
-index.htmlでMusic Macro Languageを使って譜面作成可能
+各ディレクトリのindex.htmlでMusic Macro Languageライクの記法で譜面作成可能
+
+- [t85](t85/)
+- [t202](t202/)
+
+生成したバイナリに互換性はないので注意(改善予定)
