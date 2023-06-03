@@ -45,7 +45,7 @@ static void play(const uint8_t *s){
 						_p[_dt]++;
 					}
 					_t[_dt]=t[(_dt<<1)|((*_p[_dt]>>6)&1)];// 音価1bit(5bit)
-					n[_dt]=(*_p[_dt]&0xf)>11?0:n0[*_p[_dt]&0xf]>>(((*_p[_dt]>>4)&3)+3);// オクターブ2bit 音高4bit
+					n[_dt]=(*_p[_dt]&0xf)>11?0:n0[*_p[_dt]&0xf]>>(((*_p[_dt]>>4)&3)+((cfg[_dt]>>3)&1?1:4));// オクターブ2+1bit 音高4bit
 					_n[_dt]=0;// 波形カウンタリセット
 					_v[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
 					_p[_dt]++;
@@ -62,7 +62,7 @@ static void play(const uint8_t *s){
 			if(BTN_DOWN)goto fin;// ボタン離脱
 			WAIT;
 		}
-		dc:if(!(h>>2))break;// ループ
+		dc:if(!(h>>2&1))break;// ループ
 	}
 	fin:TCA0.SINGLE.CMP2BUF=0;
 	WAIT_BTN;
@@ -84,6 +84,7 @@ void main(){
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない 
 
 	while(1){
-		blink(0b00110011);sleep();play(famima);
+		// blink(0b00110011);sleep();play(famima);
+		blink(0b00110011);sleep();play(yobikomi);
 	}
 }

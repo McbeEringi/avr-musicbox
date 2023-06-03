@@ -10,26 +10,20 @@
 	<meta name="theme-color" content="#214"/>
 
 	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/style.css">
-	<script>
-		location.hash&&(location='t85/index.html'+location.hash);
-	</script>
+	<script>location.hash&&(location='t85/index.html'+location.hash);</script>
 </head>
 <body>
 	<style>img{max-width:100%;}</style>
 	<p>loading...<br><progress></progress></p>
 	<script type="module">
 		import * as marked from'https://cdn.jsdelivr.net/npm/marked/src/marked.min.js';
-		const e=document.querySelector('p'),url=(location.search.slice(1)||'README')+'.md';
+		const e=document.querySelector('p'),url=location.search.slice(1)||'README.md';
 		marked.setOptions({baseUrl:url});
-		(async w=>{
-			w=await fetch(url);
-			if(!w.ok)throw`${w.status} - ${w.statusText}`;
-			await(async x=>(
-				x.insertAdjacentHTML('afterbegin',marked.parse(await w.text())),
-				x.querySelectorAll('a[href$=".md"]:not([attr^="http"])').forEach(x=>x.setAttribute('href','?'+x.getAttribute('href').slice(0,-3))),
-				e.replaceWith(x)
-			))(document.createElement('div'));
-		})().catch(w=>e.textContent=w);
+		(async x=>(
+			x.innerHTML=marked.parse(await(await fetch(url)).text()),
+			x.querySelectorAll('a[href$=".md"]').forEach(x=>x.setAttribute('href','?'+x.getAttribute('href'))),
+			e.replaceWith(x)
+		))(document.createElement('div')).catch(w=>e.textContent=w);
 	</script>
 </body>
 </html>
