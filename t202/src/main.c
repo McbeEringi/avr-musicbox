@@ -8,7 +8,7 @@
 #define BTN_DOWN ~VPORTA.IN&(1<<7)
 #define FOR(X) for(uint8_t i=0;i<X;i++)
 void wait(){while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=TCB_CAPT_bm;}// TCB0待ち(25us) 解除
-void wait_btn(){while(BTN_DOWN)FOR(-1)wait();}// 0.025*255=6.375ms
+void wait_btn(){while(BTN_DOWN)FOR(255)wait();}// 0.025*255=6.375ms
 
 const uint16_t n0[]={2446,2309,2179,2057,1942,1833,1730,1633,1541,1455,1373,1296};// C0~B0
 
