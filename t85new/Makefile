@@ -2,7 +2,7 @@ TARGET:=main
 HEDS:=seq.h
 SRCS:=main.c
 CC:=avr-gcc
-CFLAGS:=-Os -mmcu=attiny202
+CFLAGS:=-Os -mmcu=attiny85
 RM:=cmd.exe /C del
 
 .PHONY: clean
@@ -28,4 +28,4 @@ size: .tmp/$(TARGET).out
 	avr-size .tmp/$(TARGET).out
 
 write: $(TARGET).hex
-	avrdude -p t202 -c serialupdi -P COM3 -U flash:w:$(TARGET).hex:a
+	micronucleus $(TARGET).hex --run --dump-progress
