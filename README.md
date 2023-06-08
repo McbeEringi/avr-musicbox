@@ -19,8 +19,8 @@ avrマイコンとスピーカだけで作れる和音再生可能な電子オ�
 	- t402も可
 
 ## 譜面作成
-各ディレクトリのindex.htmlでMusic Macro Languageライクの記法で譜面作成可能
+Music Macro Languageライクの記法で譜面作成可能
 
-- [t202 & t85](t202/)
+- [t202 & t85new](mml.html)
 - [t85](t85/)(バイナリ互換性無し)
 

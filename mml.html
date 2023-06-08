@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>McbeEringi t202_musicbox mml</title>
+	<title>McbeEringi avr_musicbox mml</title>
 	<meta name="description" content="mml for t202_musicbox">
 	<link rel="icon" type="image/svg+xml" href="https://mcbeeringi.github.io/img/icon.svg">
 	<link rel="apple-touch-icon" href="https://mcbeeringi.github.io/img/icon.png">
@@ -18,13 +18,13 @@
 <pre>
 tpm(tickPerMinute)=BPM/minNote;
 
-x0000 : パート設定(低音域?1bit,音量半分?1bit,1/8パルス?1bit,減衰なし?1bit)(初期値 undefined)
+x0000 : パート設定(低音域?1bit,音量半分?1bit,1/8パルス?1bit,減衰なし?1bit)(初期値未定義)
 > : オクターブ上げ(初期値0(0~3))+(低音域?1:4)
 < : オクターブ下げ
 t : 音価メモリ0セット(初期値)
 T : 音価メモリ1セット
-1~32 : 音価セット(音価メモリ切替を積極的に用いること)(初期値 undefined)
-cdefgab : 音名(大文字半音上げ)(音名以外でのパート終了は避ける)
+1~32 : 音価セット(音価メモリ切替を積極的に用いること)(初期値未定義)
+cdefgab : 音名(大文字半音上げ)(音名以外でのパート終了は未定義)
 r : 休符
 , : パート分け
 </pre>
@@ -69,7 +69,7 @@ r : 休符
 					a.s.push(_=>osc.stop())
 				))(),a.a+=a.t[l]+1)
 			][[...Array(2)].reduce((a,_,i)=>a+((1<<(7-i))<=x),0)]()
-		):(a.a=0,a.t=[],a.cfg=0),a),{dt:240/(w[0]<<5|w[1]>>3),s:[],t0:actx.currentTime+.05}).s,
+		):(a.a=0,a.t=[],a.cfg),a),{dt:240/(w[0]<<5|w[1]>>3),s:[],t0:actx.currentTime+.05}).s,
 		_=>w.forEach(x=>x())
 	);
 

@@ -109,6 +109,6 @@ void main(){
 		blink(0b00110011);sleep();play(famima);
 		blink(0b00110011);sleep();play(ofuro);
 		blink(0b00110011);sleep();play(yobikomi);
-		blink(0b00110011);sleep();play(dw3battle);
+		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
 	}
 }
