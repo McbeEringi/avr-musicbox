@@ -23,7 +23,7 @@ static void play(const uint8_t *s){
 	static uint8_t
 	t[MTRKS<<1]={},_t[MTRKS],// 音価
 	cfg[MTRKS]={},_v[MTRKS],// 設定項目 音量
-	ntrks=0,// 有効トラック数
+	ntrks,// 有効トラック数
 	out;
 	uint16_t
 	h=(*s++<<8)|(*s++),// ヘッダ
@@ -31,6 +31,7 @@ static void play(const uint8_t *s){
 	env,// 減衰カウンタ
 	dt=96e5/(h>>3),_dt;// 最小音価 40000*240/BPM/minNote
 
+	ntrks=0;
 	while(ntrks<MTRKS){if(*s++==0){if(*s==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
 	while(1){
 		_dt=ntrks;env=1;FOR(ntrks){_p[i]=p[i];_t[i]=0;}// 初期化
@@ -83,8 +84,8 @@ void main(){
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない 
 
 	while(1){
-		// blink(0b00110011);sleep();play(famima);
-		// blink(0b00110011);sleep();play(yobikomi);
-		blink(0b00110011);sleep();play(dw3battle);
+		blink(0b00110011);sleep();play(famima);
+		blink(0b00110011);sleep();play(ofuro);
+		// blink(0b00110011);sleep();play(dw3battle);
 	}
 }
