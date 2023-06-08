@@ -41,34 +41,35 @@ static void play(const uint8_t *s){
 	static const uint8_t
 	*p[MTRKS],*_p[MTRKS];// チャネルポインタ ループ用に二重保存
 	static uint8_t
+	x[MTRKS],// 読んだやつ
 	t[MTRKS<<1]={},_t[MTRKS],// 音価
 	cfg[MTRKS]={},_v[MTRKS],// 設定項目 音量
 	ntrks,// 有効トラック数
 	out;
 	uint16_t
-	h=(*s++<<8)|(*s++),// ヘッダ
+	h=(pgm_read_byte_near(s++)<<8)|pgm_read_byte_near(s++),// ヘッダ
 	n[MTRKS]={},_n[MTRKS],// 音高
 	env,// 減衰カウンタ
-	dt=96e5/(h>>3),_dt;// 最小音価 40000*240/BPM/minNote
+	dt=75e5/(h>>3),_dt;// 最小音価 40000*240/BPM/minNote
 
 	ntrks=0;
-	while(ntrks<MTRKS){if(*s++==0){if(*s==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
+	while(ntrks<MTRKS){if(pgm_read_byte_near(s++)==0){if(pgm_read_byte_near(s)==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
 	while(1){
-		_dt=ntrks;env=1;FOR(ntrks){_p[i]=p[i];_t[i]=0;}// 初期化
+		_dt=ntrks;env=1;FOR(ntrks){_p[i]=p[i];_t[i]=0;x[i]=pgm_read_byte_near(_p[i]);}// 初期化
 		while(1){
 			if(--_dt<ntrks){
-				if(*_p[_dt]&&!_t[_dt]--){
-					while(!(*_p[_dt]&0x80)){
-						if(*_p[_dt]>>6==1)t[(_dt<<1)|((*_p[_dt]>>5)&1)]=*_p[_dt]&0x1f;// 音価メモリ変更
-						else if(*_p[_dt]>>5==1)cfg[_dt]=*_p[_dt]&0x1f;// 設定項目変更
-						else if(*_p[_dt]==1)goto dc;// 終了フラグ
-						_p[_dt]++;
+				if(x[_dt]&&!_t[_dt]--){
+					while(!(x[_dt]&0x80)){
+						if(x[_dt]>>6==1)t[(_dt<<1)|((x[_dt]>>5)&1)]=x[_dt]&0x1f;// 音価メモリ変更
+						else if(x[_dt]>>5==1)cfg[_dt]=x[_dt]&0x1f;// 設定項目変更
+						else if(x[_dt]==1)goto dc;// 終了フラグ
+						x[_dt]=pgm_read_byte_near(++_p[_dt]);
 					}
-					_t[_dt]=t[(_dt<<1)|((*_p[_dt]>>6)&1)];// 音価1bit(5bit)
-					n[_dt]=(*_p[_dt]&0xf)>11?0:n0[*_p[_dt]&0xf]>>(((*_p[_dt]>>4)&3)+((cfg[_dt]>>3)&1?1:4));// オクターブ2+1bit 音高4bit
+					_t[_dt]=t[(_dt<<1)|((x[_dt]>>6)&1)];// 音価1bit(5bit)
+					n[_dt]=(x[_dt]&0xf)>11?0:n0[x[_dt]&0xf]>>(((x[_dt]>>4)&3)+((cfg[_dt]>>3)&1?1:4));// オクターブ2+1bit 音高4bit
 					_n[_dt]=0;// 波形カウンタリセット
 					_v[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
-					_p[_dt]++;
+					x[_dt]=pgm_read_byte_near(++_p[_dt]);
 				}
 				if(!_dt)_dt=dt;
 			}
@@ -105,7 +106,9 @@ void main(){
 	TIMSK =0;         // [タイマー割り込み許可レジスタ] 無効
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
 	while(1){
-		// blink(0b00110011);sleep();play(famima);
+		blink(0b00110011);sleep();play(famima);
+		blink(0b00110011);sleep();play(ofuro);
 		blink(0b00110011);sleep();play(yobikomi);
+		blink(0b00110011);sleep();play(dw3battle);
 	}
 }

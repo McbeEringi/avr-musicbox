@@ -3,6 +3,7 @@
 	tpm:146*48,
 	loop:true,
 	notes:`
+		x0000
 		>>2feDdCc<bAaGgFfeDdCc<bAaGgF
 		T24frfr
 		>f>c<bt12r6g3Ga TArAr
@@ -12,6 +13,7 @@
 		>tffffTfteeeeTetDDDDTDt21rr3ffffTfteeeeTetDDDDTDt21rr
 		<2fFgGaAb>cCdDefFgGaAb>cCdDe,
 		
+		x0000
 		>2aGgFfeDdCcx1000>>bAaGgFfeDdCc<bA
 		T6abababab abababab
 		x0000<<
@@ -30,6 +32,7 @@
 		G>cccTctccccTctccccTc<tccTctccTctccTctcc
 		x1000>> 2aAb>cCdDefFgGaAbx0000<<cCdDefFgG,
 		
+		x0000
 		24rr
 		x1000>>6FGFGFGFGFGFGFGFG
 		fT3fftfTfftfTfftfTfftfTfftfTfftfTfftfTff

@@ -18,13 +18,13 @@
 <pre>
 tpm(tickPerMinute)=BPM/minNote;
 
-x0000 : パート設定(低音域?1bit,音量半分?1bit,1/8パルス?1bit,減衰なし?1bit)(初期値0000)
+x0000 : パート設定(低音域?1bit,音量半分?1bit,1/8パルス?1bit,減衰なし?1bit)(初期値 undefined)
 > : オクターブ上げ(初期値0(0~3))+(低音域?1:4)
 < : オクターブ下げ
 t : 音価メモリ0セット(初期値)
 T : 音価メモリ1セット
-1~32 : 音価セット(音価メモリ切替を積極的に用いること)
-cdefgab : 音名(大文字半音上げ)
+1~32 : 音価セット(音価メモリ切替を積極的に用いること)(初期値 undefined)
+cdefgab : 音名(大文字半音上げ)(音名以外でのパート終了は避ける)
 r : 休符
 , : パート分け
 </pre>
@@ -53,8 +53,8 @@ r : 休符
 		),{a:[0],o:0,t:[0,0],ti:0,ta:0})),
 		n[n.reduce((a,x,i)=>(x.ta<a.a||(a.a=x.ta,a.i=i),a),{a:0,i:-1}).i].a.push(1),
 		[(tpm>>5)&0xff,(((tpm<<1)|(!!loop))<<2)&0xff,...n.flatMap(x=>x.a),0,0]
-	),
-	play=w=>(
+	);
+	self.play=w=>(
 		w=w.slice(2).reduce((a,x)=>(x>1?(
 			[
 				_=>a.cfg=x&0x1f,
@@ -91,9 +91,8 @@ r : 休符
 	tpm:80*8,
 	loop:false,
 	notes:\`
-		x0000
-		>1Fd<a>deT3ateFe<a>4d,
-		2rF>T3C1<etaa4F
+		x0000 >1Fd<a>deT3ateFe<a>4d,
+		x0000 2rF>T3C1<etaa4F
 	\`
 }`);
 	TA.editor(ta);
