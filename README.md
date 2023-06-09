@@ -4,8 +4,9 @@ avrマイコンとスピーカだけで作れる和音再生可能な電子オ�
 [GitHub](https://github.com/mcbeeringi/avr_musicbox/)
 ## 機能
 - avrとスピーカーの直結可
-- 4ch矩形波
 - タクトスイッチとLED
+- 4ch矩形波
+- 音域: C1~B7
 - 楽譜毎にループ機能
 - チャンネル毎に設定可能
 	- 減衰の有無
@@ -14,13 +15,12 @@ avrマイコンとスピーカだけで作れる和音再生可能な電子オ�
 
 ## 対応AVR
 - ATTiny85(t85)
-	- 楽譜サイズが小さければt45も可
+	- t45も可
 - ATTiny202(t202)
 	- t402も可
 
 ## 譜面作成
 Music Macro Languageライクの記法で譜面作成可能
 
-- [t202 & t85new](mml.html)
-- [t85](t85/)(バイナリ互換性無し)
+[譜面作成 mml.html](mml.html)
 

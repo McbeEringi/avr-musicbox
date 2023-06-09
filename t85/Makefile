@@ -1,24 +1,31 @@
 TARGET:=main
-HEDS:=sheet.h
+HEDS:=seq.h
 SRCS:=main.c
 CC:=avr-gcc
 CFLAGS:=-Os -mmcu=attiny85
-RM:=cmd.exe //C del
+RM:=cmd.exe /C del
 
 .PHONY: clean
 
-OBJS:=$(addprefix tmp/,$(SRCS:.c=.o))
+OBJS:=$(addprefix .tmp/,$(SRCS:.c=.o))
 HEDS:=$(addprefix src/,$(HEDS))
 SRCS:=$(addprefix src/,$(SRCS))
 
-$(TARGET).hex: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET).out
-	avr-size $(TARGET).out
-	avr-objcopy -F ihex $(TARGET).out $(TARGET).hex
+$(TARGET).hex: .tmp/$(TARGET).out
+	avr-objcopy -F ihex .tmp/$(TARGET).out $(TARGET).hex
 
-tmp/%.o: src/%.c $(HEDS)
+.tmp/$(TARGET).out: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o .tmp/$(TARGET).out
+
+.tmp/%.o: src/%.c $(HEDS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) tmp/*.o
-	$(RM) $(TARGET).out $(TARGET).hex
+	$(RM) /q .tmp
+	$(RM) $(TARGET).hex
+
+size: .tmp/$(TARGET).out
+	avr-size .tmp/$(TARGET).out
+
+write: $(TARGET).hex
+	micronucleus $(TARGET).hex --run --dump-progress

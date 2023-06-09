@@ -8,108 +8,85 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
-#include <stdbool.h>
-#include "sheet.h"
-#define WAIT255 for(uint8_t i=-1;i>0;i--)WAIT
-#define WAIT {while(!(TIFR&0b10));TIFR|=0b10;}// タイマー0待ち(32us) 強制解除
-#define PB0_PUSHED !(PINB&0b1)
-#define FOR(X) for(uint8_t i=0;i<X;i++)
+#include "seq.h"
+
 #define MTRKS 4
-#define _OUT OUT(3)OUT(2)OUT(1)OUT(0)
-#define OUT(I) +((_t[I]=(++_t[I]==t[I]?0:_t[I]))<(t[I]>>(w[I]?2:1))?v[I]>>2:0)// 各トラック1/4にして合成 矩形波
+#define BTN_DOWN ~PINB&0b1
+#define FOR(X) for(uint8_t i=0;i<X;i++)
+void wait(){while(!(TIFR&0b10));TIFR|=0b10;}// TCB0待ち(32us) 解除
+void wait_btn(){while(BTN_DOWN)FOR(255)wait();}// 0.032*255=8.160ms
 
-static const uint16_t t0[]={1911,1804,1703,1607,1517,1432,1351,1276,1204,1136,1073,1012};//C0~B0
+const uint16_t n0[]={1911,1804,1703,1607,1517,1432,1351,1276,1204,1136,1073,1012};// C0~B0
 
-void sleep(){
+static void sleep(){
 	const uint8_t ocr1b=OCR1B;
 	OCR1B=0;// PWM停止
 	GIMSK=0b00100000;// [一般割り込み許可レジスタ] - INT0 PCIE - - - - - : PCIE
 	PCMSK=0b00000001;// [ピン変化割り込み許可レジスタ] - - PCINT5 PCINT4 PCINT3 PCINT2 PCINT1 PCINT0 : PB0
 	sei();set_sleep_mode(SLEEP_MODE_PWR_DOWN);sleep_mode();cli();// zzZ...
 	GIMSK=0;PCMSK=0;// 割り込み解除
-	while(PB0_PUSHED);WAIT255;// PB0解放待機 チャタリング対策
+	wait_btn();// PB0解放待機 チャタリング対策
 	OCR1B=ocr1b;// PWM復帰
 }ISR(PCINT0_vect){}
 
-void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
+static void blink(uint8_t x){// 下位bitから読み込み MSBの状態のまま離脱
 	for(uint8_t i=0;i<8;i++){
 		if((x>>i)&0b1)PORTB|=0b10;//1:H
 		else PORTB&=~0b10;//1:L
-		for(uint16_t j=31250>>4;j>0;j--)WAIT// 1/16秒
+		for(uint16_t j=31250>>4;j>0;j--)wait();// 1/16秒
 	}
 }
 
-void play(const uint16_t *s){
-	const uint16_t
-		*p[MTRKS],*_p[MTRKS];// チャネルポインタ ループ用に二重保存
+static void play(const uint8_t *s){
+	static const uint8_t
+	*p[MTRKS],*_p[MTRKS];// チャネルポインタ ループ用に二重保存
+	static uint8_t
+	x[MTRKS],// 読んだやつ
+	t[MTRKS<<1]={},_t[MTRKS],// 音価
+	cfg[MTRKS]={},_v[MTRKS],// 設定項目 音量
+	ntrks,// 有効トラック数
+	out;
 	uint16_t
-		x[MTRKS],_x,// PROGMEMから読んだ音符とその合計
-		t[MTRKS],_t[MTRKS],// 音高とその波形生成用カウンタ
-		dt,_dt,// 最小音価とそのカウンタ
-		h=pgm_read_word_near(s++);// ヘッダー
-	uint8_t
-		v[MTRKS],// 音量
-		l[MTRKS],// 音価
-		decay,// 減衰カウンタ
-		ntrks=0;// 有効トラック数
-	bool
-		w[MTRKS],// 波形
-		d[MTRKS];// 減衰
+	h=(pgm_read_byte_near(s++)<<8)|pgm_read_byte_near(s++),// ヘッダ
+	n[MTRKS]={},_n[MTRKS],// 音高
+	env,// 減衰カウンタ
+	dt=75e5/(h>>3),_dt;// 最小音価 40000*240/BPM/minNote
 
-	dt=75e5/(h>>2); // 最小音価 31250*240/BPM/minNote
-	FOR(MTRKS)t[i]=0;// 音高を0で初期化 ノイズ防止
-	while(ntrks<MTRKS){
-		if(pgm_read_word_near(s++)==0){// 0 チャネル先頭
-			if(pgm_read_word_near(s  )==0)break;// 0,0 楽譜終端 離脱
-			p[ntrks++]=s;// チャネルポインタ読取
-		}
-	}
-
+	ntrks=0;
+	while(ntrks<MTRKS){if(pgm_read_byte_near(s++)==0){if(pgm_read_byte_near(s)==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
 	while(1){
-		_x=1;/// チャネル合計を1で初期化
-		_dt=ntrks;// 最小音価カウンタをトラック数で初期化
-		decay=1;// 減衰カウンタを1で初期化
-		FOR(ntrks){
-			x[i]=1;// チャネルを1で初期化
-			_p[i]=p[i];// チャネルポインタ初期化
-			l[i]=0;// 音価を0で初期化
-		}
-
-		while(_x){
-			if(--_dt<ntrks){// 最小音価カウンタが終了に近づいたら
-				if(x[_dt]&&!l[_dt]--){// 前の音符が存在かつ終了したら
-					x[_dt]=pgm_read_word_near(_p[_dt]++);// PROGMEM読込
-					v[_dt]=0xff>>(x[_dt]>>15);// 音量
-					w[_dt]=(x[_dt]>>14)&0b1;// 波形
-					d[_dt]=(x[_dt]>>13)&0b1;// 減衰
-					t[_dt]=(!x[_dt]||((x[_dt]>>6)&0b1111)>0b1011)?0:t0[(x[_dt]>>6)&0b1111]>>((x[_dt]>>10)&0b111);// オクターブ3bit 音高4bit(12以上は休符)
-					l[_dt]=x[_dt]&0b111111;// 音価6bit
-
-					_t[_dt]=0;// 波形生成用カウンタ初期化
+		_dt=ntrks;env=1;FOR(ntrks){_p[i]=p[i];_t[i]=0;x[i]=pgm_read_byte_near(_p[i]);}// 初期化
+		while(1){
+			if(--_dt<ntrks){
+				if(x[_dt]&&!_t[_dt]--){
+					while(!(x[_dt]&0x80)){
+						if(x[_dt]>>6==1)t[(_dt<<1)|((x[_dt]>>5)&1)]=x[_dt]&0x1f;// 音価メモリ変更
+						else if(x[_dt]>>5==1)cfg[_dt]=x[_dt]&0x1f;// 設定項目変更
+						else if(x[_dt]==1)goto dc;// 終了フラグ
+						x[_dt]=pgm_read_byte_near(++_p[_dt]);
+					}
+					_t[_dt]=t[(_dt<<1)|((x[_dt]>>6)&1)];// 音価1bit(5bit)
+					n[_dt]=(x[_dt]&0xf)>11?0:n0[x[_dt]&0xf]>>(((x[_dt]>>4)&3)+((cfg[_dt]>>3)&1?1:4));// オクターブ2+1bit 音高4bit
+					_n[_dt]=0;// 波形カウンタリセット
+					_v[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
+					x[_dt]=pgm_read_byte_near(++_p[_dt]);
 				}
-				if(!_dt){
-					_dt=dt;// 最小音価カウンタリセット
-					_x=0;FOR(ntrks)_x|=x[i];// チャネル合計 終了判定
-				}
+				if(!_dt)_dt=dt;
 			}
-
-			OCR1B=_OUT;// 波形生成 詳しくはマクロ参照
-
-			if(--decay<ntrks){// 減衰
-				if(!d[decay])v[decay]-=(v[decay]>>5);// 上位3bitがある間は1-1/2^5倍
-				if(!decay)decay=192;// 32us*192毎
+			out=0;
+			FOR(ntrks){// 矩形波合成 1/4
+				if(++_n[i]==n[i])_n[i]=0;
+				if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=_v[i]>>2;
 			}
-
-			WAIT;
-			if(PB0_PUSHED){// PB0押下
-				while(PB0_PUSHED);WAIT255;// PB0解放待機 チャタリング対策
-				if(!(h&0b1))break;// 一時停止でなければ離脱
-				blink(0b01010101);sleep();
-			}
+			OCR1B=out;
+			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=384;}// 減衰 9.6ms毎
+			if(BTN_DOWN)goto fin;// ボタン離脱
+			wait();
 		}
-		if(!((h>>1)&0b1)||_x)break;// ループでないまたは再生途中なら
+		dc:if(!(h>>2&1))break;// ループ
 	}
-	OCR1B=0;// PWMリセット
+	fin:OCR1B=0;
+	wait_btn();
 }
 
 void main(){
@@ -129,10 +106,10 @@ void main(){
 	TIMSK =0;         // [タイマー割り込み許可レジスタ] 無効
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
 	while(1){
-		blink(0b01100110);sleep();play(sanpo);// 再生
-		blink(0b01100110);sleep();play(nyan);
-		blink(0b01100110);sleep();play(yobikomi);
-		blink(0b01100110);sleep();play(kewpie);
-		blink(0b01100110);sleep();play(small_world);
+		blink(0b00110011);sleep();play(famima);
+		blink(0b00110011);sleep();play(ofuro);
+		blink(0b00110011);sleep();play(nyan);
+		blink(0b00110011);sleep();play(yobikomi);
+		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
 	}
 }
