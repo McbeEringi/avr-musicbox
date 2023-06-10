@@ -79,7 +79,7 @@ static void play(const uint8_t *s){
 				if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=_v[i]>>2;
 			}
 			OCR1B=out;
-			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=384;}// 減衰 9.6ms毎
+			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=300;}// 減衰 9.6ms毎
 			if(BTN_DOWN)goto fin;// ボタン離脱
 			wait();
 		}
