@@ -27,9 +27,9 @@ Music Macro Languageライクの記法で譜面作成可能
 ### フォーマット
 ```
 header 2byte
-	BBBBBBBB
-	BBBBBL__
-		BPM*minNote 13bit
+	TTTTTTTT
+	TTT____L
+		TickPerMinute=(beat/minute=BPM)*(tick/beat=beat(♩(1/4) in most)/minNoteValue) 11bit
 		loop 1bit
 track
 	0 1byte

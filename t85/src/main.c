@@ -50,7 +50,7 @@ static void play(const uint8_t *s){
 	h=(pgm_read_byte_near(s++)<<8)|pgm_read_byte_near(s++),// ヘッダ
 	n[MTRKS]={},_n[MTRKS],// 音高
 	env,// 減衰カウンタ
-	dt=75e5/(h>>3),_dt;// 最小音価 40000*240/BPM/minNote
+	dt=1875e3/(h>>5),_dt;// 最小音価 31250*60/TPM
 
 	ntrks=0;
 	while(ntrks<MTRKS){if(pgm_read_byte_near(s++)==0){if(pgm_read_byte_near(s)==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
@@ -83,7 +83,7 @@ static void play(const uint8_t *s){
 			if(BTN_DOWN)goto fin;// ボタン離脱
 			wait();
 		}
-		dc:if(!(h>>2&1))break;// ループ
+		dc:if(!(h&1))break;// ループ
 	}
 	fin:OCR1B=0;
 	wait_btn();

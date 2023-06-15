@@ -1,6 +1,6 @@
 ({
 	title:'nyan',
-	tpm:140*16,
+	tpm:140*16/4,
 	loop:true,
 	notes:`
 		x0000 T2>

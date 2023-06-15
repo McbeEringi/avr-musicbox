@@ -1,6 +1,6 @@
 ({
 	title:'yobikomi',
-	tpm:131*16,
+	tpm:131*16/4,
 	loop:true,
 	notes:`
 		x0011

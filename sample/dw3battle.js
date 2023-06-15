@@ -1,6 +1,6 @@
 ({
 	title:'dw3battle',
-	tpm:146*48,
+	tpm:146*48/4,
 	loop:true,
 	notes:`
 		x0000

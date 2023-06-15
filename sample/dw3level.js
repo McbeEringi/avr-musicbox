@@ -1,6 +1,6 @@
 ({
 	title:'dw3level',
-	tpm:120*16,
+	tpm:120*16/4,
 	loop:false,
 	notes:`
 		x0000>1ffffrDrgr7f,

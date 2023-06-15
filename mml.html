@@ -53,7 +53,7 @@ r : 休符
 			a
 		),{a:[0],o:0,t:[0,0],ti:0,ta:0})),
 		n[n.reduce((a,x,i)=>(x.ta<a.a||(a.a=x.ta,a.i=i),a),{a:0,i:-1}).i].a.push(1),
-		[(tpm>>5)&0xff,(((tpm<<1)|(!!loop))<<2)&0xff,...n.flatMap(x=>x.a),0,0]
+		[(tpm>>3)&0xff,(tpm<<5|!!loop)&0xff,...n.flatMap(x=>x.a),0,0]
 	);
 	self.play=w=>(
 		w=w.slice(2).reduce((a,x)=>(x>1?(
@@ -70,7 +70,7 @@ r : 休符
 					a.s.push(_=>osc.stop())
 				))(),a.a+=a.t[l]+1)
 			][[...Array(2)].reduce((a,_,i)=>a+((1<<(7-i))<=x),0)]()
-		):(a.a=0,a.t=[],a.cfg),a),{dt:240/(w[0]<<5|w[1]>>3),s:[],t0:actx.currentTime+.05}).s,
+		):(a.a=0,a.t=[],a.cfg),a),{dt:60/(w[0]<<3|w[1]>>5),s:[],t0:actx.currentTime+.05}).s,
 		_=>w.forEach(x=>x())
 	);
 
@@ -90,7 +90,7 @@ r : 休符
 	location.hash&&(ta.value=decodeURIComponent(location.hash.slice(1)));
 	!ta.value&&(ta.value=`{
 	title:'famima',
-	tpm:80*8,
+	tpm:80*8/4,
 	loop:false,
 	notes:\`
 		x0000 >1Fd<a>deT3ateFe<a>4d,
