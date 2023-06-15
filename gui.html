@@ -45,15 +45,17 @@
 			ctx.strokeRect(x.t*w.a.spt*42,(1-(x.n-24)/84)*ctx.height,x.dt*w.a.spt*42,ctx.height/84)
 		))))
 	),
-	play=(t=0)=>(t=w.a.notes.flat().map(x=>x.t<t||((osc=actx.createOscillator(),g=actx.createGain())=>(
-		osc.setPeriodicWave(pwav[+x.mod]),
-		osc.frequency.value=440*2**((x.n-69)/12),
-		g.gain.value=[1,.5][+x.half]*.2,
-		x.env||g.gain.setTargetAtTime(0,actx.currentTime+.05+x.t*w.a.spt,.2),
-		[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
-		osc.start(actx.currentTime+.05+x.t*w.a.spt),osc.stop(actx.currentTime+.05+(x.t+x.dt)*w.a.spt),
-		_=>osc.stop()
-	))()),_=>t.forEach(x=>x()));
+	play=(t=0,t0=actx.currentTime+.05)=>(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/w.a.spt+t))(
+		w.a.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
+			osc.setPeriodicWave(pwav[+x.mod]),
+			osc.frequency.value=440*2**((x.n-69)/12),
+			g.gain.value=[1,.5][+x.half]*.2,
+			x.env||g.gain.setTargetAtTime(0,t0+(x.t-t)*w.a.spt,.2),
+			[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
+			osc.start(t0+(x.t-t)*w.a.spt),osc.stop(t0+(x.t-t+x.dt)*w.a.spt),
+			_=>osc.stop()
+		))())
+	);
 
 	c.onclick=_=>play();
 
