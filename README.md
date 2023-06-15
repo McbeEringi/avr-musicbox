@@ -24,3 +24,33 @@ Music Macro Languageライクの記法で譜面作成可能
 
 [譜面作成 mml.html](mml.html)
 
+### フォーマット
+```
+header 2byte
+	BBBBBBBB
+	BBBBBL__
+		BPM*minNote 13bit
+		loop 1bit
+track
+	0 1byte
+	commands 1byte
+		1LOONNNN
+			note=NNNN+(O+(baseMode?1:4))*12;
+			length=tick[L];
+			play();
+
+		01LTTTTT
+			tick[L]=TTTTT;
+
+		001_BVME
+			bass=B;
+			halfVol=V;
+			pulseMod=M;
+			envelope=!E;
+
+		00011111~00000010 reserved
+
+		00000001
+			break;
+0 0 2byte
+```

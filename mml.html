@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>McbeEringi avr_musicbox mml</title>
-	<meta name="description" content="mml for t202_musicbox">
+	<meta name="description" content="mml for avr_musicbox">
 	<link rel="icon" type="image/svg+xml" href="https://mcbeeringi.github.io/img/icon.svg">
 	<link rel="apple-touch-icon" href="https://mcbeeringi.github.io/img/icon.png">
 	<meta name="theme-color" content="#214"/>
@@ -32,6 +32,7 @@ r : 休符
 <button id="stpbtn" class="zab bgca">stop</button>
 <button class="zab bgca" onclick="location.hash='';">clear</button>
 <pre id="log"></pre>
+<a id="a2gui">open gui editor</a>
 <script type="module">
 	import TA from'https://mcbeeringi.github.io/ta/ta+.mjs';
 	let stop;
@@ -63,7 +64,7 @@ r : 休符
 					osc.setPeriodicWave(pwav[a.cfg>>1&1]),
 					osc.frequency.value=13.75*(2**((n+3)/12+o+(a.cfg>>3&1?1:4))),// A-1
 					g.gain.value=[1,.5][a.cfg>>2&1]*.2,
-					(a.cfg&1)||g.gain.setTargetAtTime(0,t,.3),
+					(a.cfg&1)||g.gain.setTargetAtTime(0,t,.2),
 					[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
 					osc.start(t),osc.stop(t+d),
 					a.s.push(_=>osc.stop())
@@ -80,6 +81,7 @@ r : 休符
 		w.notes=parse(w),
 		log.textContent=`const uint8_t ${w.title}[]={// ${w.notes.length}bytes\n\t${(''+w.notes).replace(/,0,/g,',\n\t0,')}\n};\n`,
 		document.title=`${w.title} t202`,
+		a2gui.href='gui.html#'+btoa(String.fromCharCode(...w.notes)),
 		stop=play(w.notes)
 	);
 	stpbtn.onclick=_=>stop&&(stop(),stop=null);;

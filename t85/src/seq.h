@@ -1,34 +1,6 @@
 #ifndef SEQ_H
 #define SEQ_H
-/*
-header 2byte
-	BBBBBBBB
-	BBBBBL__
-		BPM*minNote 13bit
-		loop 1bit
-track
-	0 1byte
-	commands 1byte
-		1LOONNNN
-			note=NNNN+(O+(baseMode?1:4))*12;
-			length=tick[L];
-			play();
 
-		01LTTTTT
-			tick[L]=TTTTT;
-
-		001_BVME
-			baseMode=B;
-			halfVolume=V;
-			octPulseMode=M;
-			envelope=E;
-
-		00011111~00000010 reserved
-
-		00000001
-			break;
-0 0 2byte
-*/
 const uint8_t PROGMEM famima[]={// 34bytes
 	20,0,
 	0,32,64,150,146,137,146,148,98,217,148,150,148,137,67,146,
@@ -69,4 +41,5 @@ const uint8_t PROGMEM dw3level[]={// 33bytes
 	0,32,64,144,139,138,137,140,135,140,138,140,70,137,1,
 	0,0
 };
+
 #endif
