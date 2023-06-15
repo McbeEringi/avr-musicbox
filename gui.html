@@ -41,8 +41,8 @@
 	},
 	render=_=>(
 		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=ctx.fillStyle=`#${['fff','0ff','f0f','ff0'][i]||(Math.abs(Math.sin(i*999))*99999999%0xfff|0).toString(16).padStart(3,0)}8`,x.forEach(x=>(
-			ctx.fillRect(x.t*w.a.spt*42,(1-(x.n-24)/84)*innerHeight,x.dt*w.a.spt*42,innerHeight/84),
-			ctx.strokeRect(x.t*w.a.spt*42,(1-(x.n-24)/84)*innerHeight,x.dt*w.a.spt*42,innerHeight/84)
+			ctx.fillRect(x.t*w.a.spt*42,(1-(x.n-24)/84)*ctx.height,x.dt*w.a.spt*42,ctx.height/84),
+			ctx.strokeRect(x.t*w.a.spt*42,(1-(x.n-24)/84)*ctx.height,x.dt*w.a.spt*42,ctx.height/84)
 		))))
 	),
 	play=(t=0)=>(t=w.a.notes.flat().map(x=>x.t<t||((osc=actx.createOscillator(),g=actx.createGain())=>(
@@ -58,8 +58,8 @@
 	c.onclick=_=>play();
 
 	let resizet;
-	(onresize=e=>(
-		c.width=innerWidth*devicePixelRatio,c.height=innerHeight*devicePixelRatio,ctx.scale(devicePixelRatio,devicePixelRatio),
+	(onresize=(e,bcr=document.documentElement.getBoundingClientRect())=>(
+		c.width=(ctx.width=bcr.width)*devicePixelRatio,c.height=(ctx.height=bcr.height)*devicePixelRatio,ctx.scale(devicePixelRatio,devicePixelRatio),
 		render()
 	))();
 	['touchstart','mousedown'].forEach(x=>addEventListener(x,_=>(actx.state=='suspended'&&actx.resume())));
