@@ -42,7 +42,7 @@
 	},
 	patt=((c=document.createElement('canvas'),ctx=c.getContext('2d'))=>(
 		c.width=4*2,c.height=4*12,
-		ctx.fillStyle='#fff',ctx.fillRect(0,0,c.width,c.height)
+		ctx.fillStyle='#fff',ctx.fillRect(0,0,c.width,c.height),
 		[1,0,1,0,1,0,1,1,0,1,0,1].forEach((x,i)=>(
 			ctx.fillStyle=x?'#fff2':'#0002',ctx.fillRect(0,i*4,4,4),ctx.fillRect(0,i*4+3,4,1),
 			ctx.fillStyle=x?'#fff1':'#0001',ctx.fillRect(4,i*4,4,4),ctx.fillRect(4,i*4+3,4,1)
