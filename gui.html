@@ -16,7 +16,7 @@
 <style>
 	:root,body{overflow:auto;}
 	#wrap{
-		--dx:max(calc(100%/84),16px);--dy:12px;
+		--dx:max(calc(100%/84),16px);--dy:4px;
 		--b0:#0002;--w0:#fff2;--b1:#0001;--w1:#fff1;
 		width:calc(var(--dx)*84);min-height:calc(var(--dy)*32);
 		background-image:
@@ -57,7 +57,21 @@
 		a
 	),{a:{tpm:(w[0]<<3|w[1]>>5)||240,loop:w[1]&1,notes:[]},_(){this.a.spt=60/this.a.tpm;this.a.notes=this.a.notes.map(x=>x.filter(x=>x.t<this.fin));return this.a;}})._(),
 	render=({seq:s=seq}={})=>(
-		wrap.textContent=''
+		wrap.textContent='',wrap.style.position='relative',
+		wrap.append(...s.notes.flatMap((x,i)=>(
+			x.map((y,j,b)=>(
+				b=document.createElement('p'),
+				b.style.position='absolute',b.style.backgroundColor=['#fff8','#0ff8','#f0f8','#ff08'][i],b.style.margin=0,
+				b.style.border=`${b.style.backgroundColor} 1px solid`,b.style.boxSizing='border-box',
+				b.style.top=`calc(var(--dy)*${y.t})`,b.style.height=`calc(var(--dy)*${y.dt})`,
+				b.style.left=`calc(var(--dx)*${y.n-24})`,b.style.width='var(--dx)',
+				b.dataset.i=i,b.dataset.j=j,
+				b.draggable=true,
+				b.onclick=_=>(stop&&stop(),stop=play()),
+				b
+			))
+		))),
+		wrap.style.height=`calc(var(--dy)*${Math.max(...s.notes.map(x=>Math.max(...x.map(y=>y.t+y.dt))))})`
 	),
 	play=({t=0,t0=actx.currentTime+.05,seq:s=seq}={})=>s&&(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/s.spt+t))(
 		s.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
@@ -72,7 +86,12 @@
 	);
 
 	seq=bin2seq();render();
-	wrap.onclick=_=>(stop&&stop(),stop=play());
+	//wrap.ondragstart=e=>console.log(e,e.dataTransfer.effectAllowed='move');
+	wrap.ondragend=e=>(
+		e.target.style.top=e.clientY-wrap.getBoundingClientRect().top+'px',
+		e.target.style.left=e.clientX-wrap.getBoundingClientRect().left+'px'
+	);
+	wrap.ondragover=e=>e.preventDefault();
 
 	dark.addEventListener?dark.addEventListener('change',render):dark.addListener(render);
 	['touchstart','mousedown'].forEach(x=>addEventListener(x,_=>actx.state=='suspended'&&actx.resume()));
