@@ -18,7 +18,7 @@
 <div class="zab" style="position:fixed;top:0;left:0;"></div>
 <script>
 	const
-	res=matchMedia('(pointer:coarse)').matches?12:8,
+	res=matchMedia('(pointer:coarse)').matches?16:12,
 	dark=matchMedia('(prefers-color-scheme:dark)'),
 	ctx=c.getContext('2d'),
 	actx=new(window.AudioContext||webkitAudioContext)(),
@@ -51,17 +51,12 @@
 	))(),
 	render=_=>(
 		ctx.clearRect(0,0,ctx.width,ctx.height),
-		ctx.save(),
-		// ctx.scale(.2,1),
-		// ctx.translate(-res*2,0),
-		//ctx.fillStyle=patt,ctx.fillRect(0,0,ctx.width,ctx.height),
 		[...Array(Math.ceil(ctx.width/res))].forEach((_,i)=>[...Array(7)].forEach((_,j)=>ctx.drawImage(patt,res*2*i,res*12*j,res*2,res*12))),
-
 		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=ctx.fillStyle=`#${['f48','f84','8f4','48f'][i]||'f0f'}c`,x.forEach(x=>(
 			x=[x.t*res,(107-x.n)*res,x.dt*res,res],
 			ctx.fillRect(...x),ctx.strokeRect(...x.map((x,i)=>x+(i<2?ctx.lineWidth/2:-ctx.lineWidth)))
 		)))),
-		ctx.restore()
+		ctx.fillStyle='#f00c',ctx.fillRect(w.a.break*res,0,res/4,ctx.height)
 	),
 	play=(t=0,t0=actx.currentTime+.05)=>(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/w.a.spt+t))(
 		w.a.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
