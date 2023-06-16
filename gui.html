@@ -13,63 +13,69 @@
 	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/comp.css">
 </head>
 <body>
-<style>:root,body,#c{width:100%;height:100%;margin:0;vertical-align:top;image-rendering:crisp-edges;}</style>
-<canvas id="c"></canvas>
+<style>
+	:root,body{overflow:auto;}
+	#wrap{
+		--dx:max(calc(100%/84),16px);--dy:12px;
+		--b0:#0002;--w0:#fff2;--b1:#0001;--w1:#fff1;
+		width:calc(var(--dx)*84);min-height:calc(var(--dy)*32);
+		background-image:
+			repeating-linear-gradient(90deg,
+				var(--w0) calc(var(--dx)*0 ),var(--w1) calc(var(--dx)*1 ),var(--b0) calc(var(--dx)*1 ),var(--b1) calc(var(--dx)*2 ),
+				var(--w0) calc(var(--dx)*2 ),var(--w1) calc(var(--dx)*3 ),var(--b0) calc(var(--dx)*3 ),var(--b1) calc(var(--dx)*4 ),
+				var(--w0) calc(var(--dx)*4 ),var(--w1) calc(var(--dx)*5 ),var(--w0) calc(var(--dx)*5 ),var(--w1) calc(var(--dx)*6 ),var(--b0) calc(var(--dx)*6 ),var(--b1) calc(var(--dx)*7 ),
+				var(--w0) calc(var(--dx)*7 ),var(--w1) calc(var(--dx)*8 ),var(--b0) calc(var(--dx)*8 ),var(--b1) calc(var(--dx)*9 ),
+				var(--w0) calc(var(--dx)*9 ),var(--w1) calc(var(--dx)*10),var(--b0) calc(var(--dx)*10),var(--b1) calc(var(--dx)*11),
+				var(--w0) calc(var(--dx)*11),var(--w1) calc(var(--dx)*12)
+			),
+			repeating-linear-gradient(90deg,#f002,#0000 calc(var(--dx)*12)),
+			repeating-linear-gradient(#8882,#8882 var(--dy),#0000 var(--dy),#0000 calc(var(--dy)*2)),
+			repeating-linear-gradient(#0f01,#0000 calc(var(--dy)*8))
+	}
+</style>
+<div id="wrap">
+</div>
 <script>
+	let seq,stop;
 	const
 	dark=matchMedia('(prefers-color-scheme:dark)'),
-	ctx=c.getContext('2d'),
 	actx=new(window.AudioContext||webkitAudioContext)(),
 	fft=w=>((
 		n=[...Array(Math.log2(w.length))],br=x=>n.reduce((a,_,i)=>(a<<1)|(x>>>i&1),0),trs=x=>x[0].map((_,i)=>x.map(y=>y[i])),
 		pm=(a,b,[c,d])=>[[a+c,b+d],[a-c,b-d]],mul=(a,b,c,d)=>[a*c-b*d,a*d+b*c],core=([a,b],[c,d],t)=>pm(a,b,mul(c,d,Math.cos(t*=-Math.PI),Math.sin(t)))
 	)=>trs(n.reduce((a,x,i)=>(x=2**i,[...Array(a.length/2)].forEach((_,j)=>[a[i+j],a[i+j+x]]=core(a[(i=(j/x|0)*x*2)+(j%=x)],a[i+j+x],j/x)),a),w.map((_,i)=>[w[br(i)],0]))))(),
 	pwav=[[1,1,0,0],[1,0,0,0]].map(w=>actx.createPeriodicWave(...fft(w.flatMap(x=>Array(4096/w.length).fill(x*2-1))).map(x=>new Float32Array([0,...x.slice(1)])))),
-	w={
-		bin:location.hash?[...atob(location.hash.slice(1))].map(x=>x.charCodeAt()):[],
-		get a(){return this._a||(this._a=this.bin.reduce((a,x,i)=>(
-			1<i&&!a.done&&([
-				_=>a.a.notes.length&&!a.a.notes[a.a.notes.length-1].length?(a.a.notes.pop(),a.done=!0):(a.a.notes.push([]),a.t=0,a.dt=[]),
-				_=>a.fin=a.t,,,,,_=>a.cfg=x&0x1f,_=>a.dt[x>>5&1]=(x&0x1f)+1,
-				_=>(
-					11<(x&15)||a.a.notes[a.a.notes.length-1].push({n:((a.cfg>>3&1?1:4)+(x>>4&3)+1)*12+(x&15),t:a.t,dt:a.dt[x>>6&1],half:!!(a.cfg&4),mod:!!(a.cfg&2),env:!!(a.cfg&1)}),
-					a.t+=a.dt[x>>6&1]
-				)
-			][Math.log2(x)+!!x|0]||(_=>console.log(`unknown command 0x${x.toString(16).padStart(2,0)}@0x${i.toString(16)}`)))(),
-			a
-		),{a:{tpm:this.bin[0]<<3|this.bin[1]>>5,loop:this.bin[1]&1,notes:[]},_(){this.a.spt=60/this.a.tpm;this.a.notes=this.a.notes.map(x=>x.filter(x=>x.t<this.fin));return this.a;}})._());},
-		set a(x){this._a=null;this.bin=x;}
-	},
-	render=_=>(
-		ctx.clearRect(0,0,ctx.width,ctx.height),
-		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=ctx.fillStyle=`#${(dark.matches?['fff','0ff','f0f','ff0']:['888','088','808','880'])[i]||(Math.abs(Math.sin(i*999))*99999999%0xfff|0).toString(16).padStart(3,0)}8`,x.forEach(x=>(
-			x=[x.t*w.a.spt*85,(1-(x.n-24)/88)*ctx.height,x.dt*w.a.spt*85,ctx.height/88],
-			ctx.fillRect(...x),ctx.strokeRect(...x)
-		)))),
-		ctx.fillStyle='#4448',
-		ctx.fillRect(0,0,ctx.width,ctx.height/88*4)
+	bin2seq=(w=location.hash?[...atob(location.hash.slice(1))].map(x=>x.charCodeAt()):[])=>w.reduce((a,x,i)=>(
+		1<i&&!a.done&&([
+			_=>a.a.notes.length&&!a.a.notes[a.a.notes.length-1].length?(a.a.notes.pop(),a.done=!0):(a.a.notes.push([]),a.t=0,a.dt=[]),
+			_=>a.fin=a.t,,,,,_=>a.cfg=x&0x1f,_=>a.dt[x>>5&1]=(x&0x1f)+1,
+			_=>(
+				11<(x&15)||a.a.notes[a.a.notes.length-1].push({n:((a.cfg>>3&1?1:4)+(x>>4&3)+1)*12+(x&15),t:a.t,dt:a.dt[x>>6&1],half:a.cfg>>2&1,mod:a.cfg>>1&1,env:a.cfg&1}),
+				a.t+=a.dt[x>>6&1]
+			)
+		][Math.log2(x)+!!x|0]||(_=>console.log(`unknown command 0x${x.toString(16).padStart(2,0)}@0x${i.toString(16)}`)))(),
+		a
+	),{a:{tpm:(w[0]<<3|w[1]>>5)||240,loop:w[1]&1,notes:[]},_(){this.a.spt=60/this.a.tpm;this.a.notes=this.a.notes.map(x=>x.filter(x=>x.t<this.fin));return this.a;}})._(),
+	render=({seq:s=seq}={})=>(
+		wrap.textContent=''
 	),
-	play=(t=0,t0=actx.currentTime+.05)=>(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/w.a.spt+t))(
-		w.a.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
-			osc.setPeriodicWave(pwav[+x.mod]),
+	play=({t=0,t0=actx.currentTime+.05,seq:s=seq}={})=>s&&(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/s.spt+t))(
+		s.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
+			osc.setPeriodicWave(pwav[x.mod]),
 			osc.frequency.value=440*2**((x.n-69)/12),
-			g.gain.value=[1,.5][+x.half]*.2,
-			x.env||g.gain.setTargetAtTime(0,t0+(x.t-t)*w.a.spt,.2),
+			g.gain.value=[1,.5][x.half]*.2,
+			x.env||g.gain.setTargetAtTime(0,t0+(x.t-t)*s.spt,.2),
 			[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
-			osc.start(t0+(x.t-t)*w.a.spt),osc.stop(t0+(x.t-t+x.dt)*w.a.spt),
+			osc.start(t0+(x.t-t)*s.spt),osc.stop(t0+(x.t-t+x.dt)*s.spt),
 			_=>osc.stop()
 		))())
 	);
 
-	c.onclick=_=>play();
+	seq=bin2seq();render();
+	wrap.onclick=_=>(stop&&stop(),stop=play());
 
-	let resizet;
-	(onresize=(e,bcr=document.documentElement.getBoundingClientRect(),s=devicePixelRatio)=>(
-		c.width=(ctx.width=bcr.width)*s,c.height=(ctx.height=bcr.height)*s,ctx.scale(s,s),
-		render()
-	))();
 	dark.addEventListener?dark.addEventListener('change',render):dark.addListener(render);
-	['touchstart','mousedown'].forEach(x=>addEventListener(x,_=>(actx.state=='suspended'&&actx.resume())));
+	['touchstart','mousedown'].forEach(x=>addEventListener(x,_=>actx.state=='suspended'&&actx.resume()));
 
 </script>
 </body>
