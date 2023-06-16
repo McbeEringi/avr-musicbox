@@ -40,7 +40,7 @@
 		),{a:{tpm:this.bin[0]<<3|this.bin[1]>>5,loop:this.bin[1]&1,notes:[]},_(){this.a.spt=60/this.a.tpm;this.a.notes=this.a.notes.map(x=>x.filter(x=>x.t<this.fin));return this.a;}})._());},
 		set a(x){this._a=null;this.bin=x;}
 	},
-	patt=((c=document.createElement('canvas'),ctx=c.getContext('2d'))=>(
+	patt=ctx.createPattern(((c=document.createElement('canvas'),ctx=c.getContext('2d'))=>(
 		c.width=4*2,c.height=4*12,
 		ctx.fillStyle='#fff',ctx.fillRect(0,0,c.width,c.height),
 		[1,0,1,0,1,0,1,1,0,1,0,1].forEach((x,i)=>(
@@ -48,7 +48,7 @@
 			ctx.fillStyle=x?'#fff1':'#0001',ctx.fillRect(4,i*4,4,4),ctx.fillRect(4,i*4+3,4,1)
 		)),
 		c
-	))(),
+	))(),''),
 	render=_=>(
 		ctx.lineWidth=1,
 		ctx.clearRect(0,0,c.width,c.height),
