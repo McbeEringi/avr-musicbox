@@ -13,10 +13,11 @@
 	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/comp.css">
 </head>
 <body>
-<style>:root,body,#c{width:100%;height:100%;margin:0;vertical-align:top;}</style>
+<style>:root,body,#c{width:100%;height:100%;margin:0;vertical-align:top;image-rendering:crisp-edges;}</style>
 <canvas id="c"></canvas>
 <script>
 	const
+	dark=matchMedia('(prefers-color-scheme:dark)'),
 	ctx=c.getContext('2d'),
 	actx=new(window.AudioContext||webkitAudioContext)(),
 	fft=w=>((
@@ -40,10 +41,13 @@
 		set a(x){this._a=null;this.bin=x;}
 	},
 	render=_=>(
-		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=ctx.fillStyle=`#${['fff','0ff','f0f','ff0'][i]||(Math.abs(Math.sin(i*999))*99999999%0xfff|0).toString(16).padStart(3,0)}8`,x.forEach(x=>(
-			ctx.fillRect(x.t*w.a.spt*42,(1-(x.n-24)/84)*ctx.height,x.dt*w.a.spt*42,ctx.height/84),
-			ctx.strokeRect(x.t*w.a.spt*42,(1-(x.n-24)/84)*ctx.height,x.dt*w.a.spt*42,ctx.height/84)
-		))))
+		ctx.clearRect(0,0,ctx.width,ctx.height),
+		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=ctx.fillStyle=`#${(dark.matches?['fff','0ff','f0f','ff0']:['888','088','808','880'])[i]||(Math.abs(Math.sin(i*999))*99999999%0xfff|0).toString(16).padStart(3,0)}8`,x.forEach(x=>(
+			x=[x.t*w.a.spt*85,(1-(x.n-24)/88)*ctx.height,x.dt*w.a.spt*85,ctx.height/88],
+			ctx.fillRect(...x),ctx.strokeRect(...x)
+		)))),
+		ctx.fillStyle='#4448',
+		ctx.fillRect(0,0,ctx.width,ctx.height/88*4)
 	),
 	play=(t=0,t0=actx.currentTime+.05)=>(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/w.a.spt+t))(
 		w.a.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
@@ -60,10 +64,11 @@
 	c.onclick=_=>play();
 
 	let resizet;
-	(onresize=(e,bcr=document.documentElement.getBoundingClientRect())=>(
-		c.width=(ctx.width=bcr.width)*devicePixelRatio,c.height=(ctx.height=bcr.height)*devicePixelRatio,ctx.scale(devicePixelRatio,devicePixelRatio),
+	(onresize=(e,bcr=document.documentElement.getBoundingClientRect(),s=devicePixelRatio)=>(
+		c.width=(ctx.width=bcr.width)*s,c.height=(ctx.height=bcr.height)*s,ctx.scale(s,s),
 		render()
 	))();
+	dark.addEventListener?dark.addEventListener('change',render):dark.addListener(render);
 	['touchstart','mousedown'].forEach(x=>addEventListener(x,_=>(actx.state=='suspended'&&actx.resume())));
 
 </script>
