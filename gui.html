@@ -25,6 +25,7 @@
 	res=matchMedia('(pointer:coarse)').matches?16:12,
 	dark=matchMedia('(prefers-color-scheme:dark)'),
 	p=[0,0],
+	cur={p0:[0,0],p1:[0,0],get e(){return w.a.notes.flatMap((_,i)=>_.reduce((a,x,j)=>(aabbc(bsort(this.p0.map(_=>_/res),this.p1.map(_=>_/res)),[[x.t,107-x.n],[x.t+x.dt,107-x.n+1]])&&a.push([i,j]),a),[]));}},
 	ctx=c.getContext('2d'),
 	actx=new(window.AudioContext||webkitAudioContext)(),
 	fft=w=>((
@@ -44,7 +45,7 @@
 				)
 			][Math.log2(x)+!!x|0]||(_=>console.log(`unknown command 0x${x.toString(16).padStart(2,0)}@0x${i.toString(16)}`)))(),
 			a
-		),{a:{tpm:this.bin[0]<<3|this.bin[1]>>5,loop:this.bin[1]&1,notes:[]},_(){this.a.spt=60/this.a.tpm;return this.a;}})._());},
+		),{a:{tpm:this.bin[0]<<3|this.bin[1]>>5,loop:this.bin[1]&1,notes:[],tmax:0},_(){this.a.spt=60/this.a.tpm;return this.a;}})._());},
 		set a(x){this._a=null;this.bin=x;}
 	},
 	patt=((_c=document.createElement('canvas'),_ctx=_c.getContext('2d'))=>(
@@ -54,10 +55,11 @@
 			_ctx.fillStyle=col.bg(x,1),_ctx.fillRect(1,i*res,res,res),_ctx.fillRect(1,(i+1)*res-1,res,1)
 		)),_c
 	))(),
-	render=(mm=0)=>(
+	render=(mm=0,_)=>(
 		ctx.clearRect(0,0,ctx.width,ctx.height),ctx.lineWidth=res/4,
 		[...Array(Math.ceil(ctx.width/res/2)+1)].forEach((_,i)=>[...Array(Math.ceil(ctx.height/res/12)+1)].forEach((_,j)=>ctx.drawImage(patt,res*2*i-p[0]%(res*2),res*12*j-p[1]%(res*12),res*2,res*12))),
-		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=col.note(i,'c'),ctx.fillStyle=col.note(i,8),x.forEach(x=>(
+		_=cur.e,
+		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=col.note(i,'c'),ctx.fillStyle=col.note(i,8),x.forEach((x,j)=>(ctx.strokeStyle=_.some(_=>i==_[0]&&j==_[1])?'#48f':col.note(i,'c'),
 			x=[x.t*res-p[0],(107-x.n)*res-p[1],x.dt*res,res],
 			ctx.fillRect(...x),ctx.strokeRect(...x.map((x,i)=>x+(i<2?ctx.lineWidth/2:-ctx.lineWidth)))
 		)))),
@@ -69,7 +71,10 @@
 			)))),
 			ctx.fillStyle=col.break,ctx.fillRect(w.a.break+(ctx.width-(w.a.tmax+32))*pn[0],ctx.height/2-42,1,84),
 			ctx.fillStyle=getComputedStyle(c).getPropertyValue('--fc')+'4',ctx.fillRect((ctx.width-ctx.width/res)*pn[0],(84-ctx.height/res)*pn[1]+ctx.height/2-42,ctx.width/res,ctx.height/res)
-		))()
+		))(),
+		cur.down&&(
+			ctx.fillStyle='#48f4',ctx.fillRect(...cur.p0.map((x,i)=>x-p[i]),...cur.p0.map((x,i)=>cur.p1[i]-x))
+		)
 	),
 	play=(t=0,t0=actx.currentTime+.05)=>(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/w.a.spt+t))(
 		w.a.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
@@ -81,7 +86,9 @@
 			osc.start(t0+(x.t-t)*w.a.spt),osc.stop(t0+(x.t-t+x.dt)*w.a.spt),
 			_=>osc.stop()
 		))())
-	);
+	),
+	bsort=(a,b)=>[[Math.min(a[0],b[0]),Math.min(a[1],b[1])],[Math.max(a[0],b[0]),Math.max(a[1],b[1])]],
+	aabbc=(a,b)=>a[0][0]<b[1][0]&&a[0][1]<b[1][1]&&b[0][0]<a[1][0]&&b[0][1]<a[1][1];
 
 	c.onclick=_=>play();
 
@@ -93,6 +100,14 @@
 			(p[1]!=(p[1]=Math.max(0,Math.min(p[1]+(e.shiftKey?-e.deltaX:e.deltaY),res*84-bcr.height))))
 		)&&(render(1),clearTimeout(mmt),mmt=setTimeout(_=>render(),500))
 	);
+
+	c.onpointerdown=e=>e.isPrimary&&(
+		cur.p1=cur.p0=[e.clientX+p[0],e.clientY+p[1]],cur.down=1,cur.long=0,cur.longt=setTimeout(_=>cur.long=1,500),
+		render()
+	);
+	onpointermove=e=>e.isPrimary&&cur.down&&(clearTimeout(cur.longt),cur.p1=[e.clientX+p[0],e.clientY+p[1]],render());
+	onpointerup=e=>e.isPrimary&&(clearTimeout(cur.longt),cur.p1=[e.clientX+p[0],e.clientY+p[1]],cur.down=0,render());
+
 
 	(onresize=(e,dpr=devicePixelRatio,bcr=c.getBoundingClientRect())=>(
 		c.height=(ctx.height=Math.min(res*84,bcr.height))*dpr,c.width=(ctx.width=ctx.height*bcr.width/bcr.height)*dpr,ctx.scale(dpr,dpr),
