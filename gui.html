@@ -18,8 +18,10 @@
 <div class="zab" style="position:fixed;top:0;left:0;"></div>
 <script>
 	const
+	mod=(x,y)=>(x%y+y)%y,
 	res=matchMedia('(pointer:coarse)').matches?16:12,
 	dark=matchMedia('(prefers-color-scheme:dark)'),
+	p=[0,0],
 	ctx=c.getContext('2d'),
 	actx=new(window.AudioContext||webkitAudioContext)(),
 	fft=w=>((
@@ -51,9 +53,9 @@
 	))(),
 	render=_=>(
 		ctx.clearRect(0,0,ctx.width,ctx.height),
-		[...Array(Math.ceil(ctx.width/res))].forEach((_,i)=>[...Array(7)].forEach((_,j)=>ctx.drawImage(patt,res*2*i,res*12*j,res*2,res*12))),
+		[...Array(Math.ceil(ctx.width/res/2)+1)].forEach((_,i)=>[...Array(Math.ceil(ctx.height/res/12)+1)].forEach((_,j)=>ctx.drawImage(patt,res*2*i-p[0]%(res*2),res*12*j-p[1]%(res*12),res*2,res*12))),
 		w.a.notes.forEach((x,i)=>(ctx.strokeStyle=ctx.fillStyle=`#${['f48','f84','8f4','48f'][i]||'f0f'}c`,x.forEach(x=>(
-			x=[x.t*res,(107-x.n)*res,x.dt*res,res],
+			x=[x.t*res-p[0],(107-x.n)*res-p[1],x.dt*res,res],
 			ctx.fillRect(...x),ctx.strokeRect(...x.map((x,i)=>x+(i<2?ctx.lineWidth/2:-ctx.lineWidth)))
 		)))),
 		ctx.fillStyle='#f00c',ctx.fillRect(w.a.break*res,0,res/4,ctx.height)
@@ -71,6 +73,12 @@
 	);
 
 	c.onclick=_=>play();
+	c.onwheel=(e,bcr=c.getBoundingClientRect())=>(
+		e.preventDefault(),
+		p[0]=Math.min(Math.max(0,p[0]+(e.shiftKey?e.deltaY:e.deltaX)),Infinity),
+		p[1]=Math.min(Math.max(0,p[1]+(e.shiftKey?-e.deltaX:e.deltaY)),res*84-bcr.height),
+		render()
+	);
 
 	(onresize=(e,dpr=devicePixelRatio,bcr=c.getBoundingClientRect())=>(
 		c.height=(ctx.height=Math.min(res*84,bcr.height)),c.width=(ctx.width=ctx.height*bcr.width/bcr.height),
