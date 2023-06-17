@@ -13,7 +13,7 @@
 	<link rel="stylesheet" href="https://mcbeeringi.github.io/src/comp.css">
 </head>
 <body>
-<style>:root,body,#c{width:100%;height:100%;margin:0;vertical-align:top;image-rendering:pixelated;}</style>
+<style>:root,body,#c{width:100%;height:100%;margin:0;vertical-align:top;image-rendering:pixelated;touch-action:pinch-zoom;}</style>
 <canvas id="c"></canvas>
 <script>
 	const
@@ -102,12 +102,11 @@
 	);
 
 	c.onpointerdown=e=>e.isPrimary&&(
-		e.preventDefault(),
 		cur.p1=cur.p0=[e.clientX+p[0],e.clientY+p[1]],cur.down=1,cur.long=0,cur.longt=setTimeout(_=>cur.long=1,500),
 		render()
 	);
-	onpointermove=e=>e.isPrimary&&cur.down&&(e.preventDefault(),clearTimeout(cur.longt),cur.p1=[e.clientX+p[0],e.clientY+p[1]],render());
-	onpointerup=e=>e.isPrimary&&(e.preventDefault(),clearTimeout(cur.longt),cur.p1=[e.clientX+p[0],e.clientY+p[1]],cur.down=0,render());
+	onpointermove=e=>e.isPrimary&&cur.down&&(clearTimeout(cur.longt),cur.p1=[e.clientX+p[0],e.clientY+p[1]],render());
+	onpointerup=e=>e.isPrimary&&(clearTimeout(cur.longt),cur.p1=[e.clientX+p[0],e.clientY+p[1]],cur.down=0,render());
 
 
 	(onresize=(e,dpr=devicePixelRatio,bcr=c.getBoundingClientRect())=>(
