@@ -18,7 +18,7 @@
 <script>
 
 	let
-	bin,seq,mmt;
+	bin,seq,mmt,rt;
 	const
 	col={
 		note:(i,x)=>`#${['f48','f84','8f4','48f'][i]||'f0f'}${x}`,
@@ -28,7 +28,12 @@
 	res=matchMedia('(pointer:coarse)').matches?16:12,
 	dark=matchMedia('(prefers-color-scheme:dark)'),
 	p=[0,0],
-	cur={p0:[0,0],p1:[0,0],get e(){return seq.notes.flatMap((_,i)=>_.reduce((a,x,j)=>(aabbc(bsort(this.p0.map(_=>_/res),this.p1.map(_=>_/res)),[[x.t,107-x.n],[x.t+x.dt,107-x.n+1]])&&a.push([i,j]),a),[]));}},
+	cur={
+		p0:[0,0],p1:[0,0],
+		get e(){return seq.notes.flatMap((_,i)=>_.reduce((a,x,j)=>(aabbc(bsort(this.p0.map(_=>_/res),this.p1.map(_=>_/res)),[[x.t,107-x.n],[x.t+x.dt,107-x.n+1]])&&a.push([i,j]),a),[]));},
+		set type(a){console.log(this._type=a)},
+		get type(){return this._type;},
+	},
 	ctx=c.getContext('2d'),
 	actx=new(window.AudioContext||webkitAudioContext)(),
 	fft=w=>((
@@ -54,27 +59,27 @@
 		][Math.log2(x)+!!x|0]||(_=>console.log(`unknown command 0x${x.toString(16).padStart(2,0)}@0x${i.toString(16)}`)))(),
 		a
 	),{a:{tpm:bin[0]<<3|bin[1]>>5,loop:bin[1]&1,notes:[],tmax:0},_(){this.a.spt=60/this.a.tpm;return this.a;}})._(),
-	render=(mm=0,_)=>(
+	render=(mm=0,_)=>(cancelAnimationFrame(rt),rt=requestAnimationFrame(_=>(
 		ctx.clearRect(0,0,ctx.width,ctx.height),ctx.lineWidth=res/4,
 		[...Array(Math.ceil(ctx.width/res/2)+1)].forEach((_,i)=>[...Array(Math.ceil(ctx.height/res/12)+1)].forEach((_,j)=>ctx.drawImage(patt,res*2*i-p[0]%(res*2),res*12*j-p[1]%(res*12),res*2,res*12))),
-		_=cur.e,
+		_=[],//cur.e,
 		seq.notes.forEach((x,i)=>(ctx.strokeStyle=col.note(i,'c'),ctx.fillStyle=col.note(i,8),x.forEach((x,j)=>(ctx.strokeStyle=_.some(_=>i==_[0]&&j==_[1])?'#48f':col.note(i,'c'),
 			x=[x.t*res-p[0],(107-x.n)*res-p[1],x.dt*res,res],
 			ctx.fillRect(...x),ctx.strokeRect(...x.map((x,i)=>x+(i<2?ctx.lineWidth/2:-ctx.lineWidth)))
 		)))),
 		ctx.fillStyle=col.break,ctx.fillRect(seq.break*res-p[0],0,res/4,ctx.height),
 		mm&&((bcr=c.getBoundingClientRect(),pn=[p[0]/(res*(seq.tmax+32)-bcr.width),p[1]/(res*84-bcr.height)])=>(
-			ctx.fillStyle=getComputedStyle(c).getPropertyValue('--bc')+'c',ctx.fillRect(0,ctx.height/2-42,ctx.width,84),
+			ctx.fillStyle='#000c',ctx.fillRect(0,ctx.height/2-42,ctx.width,84),
 			seq.notes.forEach((x,i)=>(ctx.fillStyle=col.note(i,'f'),x.forEach(x=>ctx.fillRect(
 				x.t+(ctx.width-(seq.tmax+32))*pn[0],(107-x.n)+ctx.height/2-42,x.dt,1
 			)))),
 			ctx.fillStyle=col.break,ctx.fillRect(seq.break+(ctx.width-(seq.tmax+32))*pn[0],ctx.height/2-42,1,84),
-			ctx.fillStyle=getComputedStyle(c).getPropertyValue('--fc')+'4',ctx.fillRect((ctx.width-ctx.width/res)*pn[0],(84-ctx.height/res)*pn[1]+ctx.height/2-42,ctx.width/res,ctx.height/res)
+			ctx.fillStyle='#fff4',ctx.fillRect((ctx.width-ctx.width/res)*pn[0],(84-ctx.height/res)*pn[1]+ctx.height/2-42,ctx.width/res,ctx.height/res)
 		))(),
-		cur.down&&(
-			ctx.fillStyle='#48f4',ctx.fillRect(...cur.p0.map((x,i)=>x-p[i]),...cur.p0.map((x,i)=>cur.p1[i]-x))
+		cur.type=='long'&&(
+			ctx.fillStyle='#48f4',ctx.fillRect(...cur.p0,...cur.p0.map((x,i)=>cur.p1[i]-x))
 		)
-	),
+	))),
 	play=(t=0,t0=actx.currentTime+.05)=>(a=>_=>(a.forEach(x=>x&&x()),(actx.currentTime-t0)/seq.spt+t))(
 		seq.notes.flat().map(x=>!(x.t<t)&&((osc=actx.createOscillator(),g=actx.createGain())=>(
 			osc.setPeriodicWave(pwav[+x.mod]),
@@ -89,7 +94,7 @@
 	bsort=(a,b)=>[[Math.min(a[0],b[0]),Math.min(a[1],b[1])],[Math.max(a[0],b[0]),Math.max(a[1],b[1])]],
 	aabbc=(a,b)=>a[0][0]<b[1][0]&&a[0][1]<b[1][1]&&b[0][0]<a[1][0]&&b[0][1]<a[1][1],
 	scroll=(w,m=(x=>[res*(seq.tmax+32)-x.width,res*84-x.height])(c.getBoundingClientRect()))=>
-		m.reduce((a,x,i)=>a||(p[i]!=(p[i]=Math.max(0,Math.min(p[i]+w[i],m[i])))),false)&&(render(1),clearTimeout(mmt),mmt=setTimeout(_=>render(),500));
+		m.reduce((a,x,i)=>a||(p[i]!=(p[i]=Math.max(0,Math.min(w[i],m[i])))),false)&&(render(1),clearTimeout(mmt),mmt=setTimeout(_=>render(),500));
 	
 
 
@@ -98,14 +103,23 @@
 
 	// c.onclick=_=>play();
 
-	c.onwheel=e=>(e.preventDefault(),scroll([e.shiftKey?e.deltaY:e.deltaX,e.shiftKey?-e.deltaX:e.deltaY]));
+	c.onwheel=e=>(e.preventDefault(),scroll([p[0]+(e.shiftKey?e.deltaY:e.deltaX),p[1]+(e.shiftKey?-e.deltaX:e.deltaY)]));
 
 	c.onpointerdown=e=>e.isPrimary&&(
-		cur.p1=cur.p0=[scrollX+e.clientX+p[0],scrollY+e.clientY+p[1]],cur.down=1,cur.long=0,cur.longt=setTimeout(_=>cur.long=1,500),
+		cur.type=-300<cur.t0-(cur.t0=performance.now())?'double':'single',cur.longt=setTimeout(_=>cur.type='long',200),
+		cur.p1=cur.p0=[scrollX+e.clientX,scrollY+e.clientY],cur._p=[...p],
 		render()
 	);
-	onpointermove=e=>e.isPrimary&&cur.down&&(clearTimeout(cur.longt),cur.p1=[scrollX+e.clientX+p[0],scrollY+e.clientY+p[1]],render());
-	onpointerup=e=>e.isPrimary&&(clearTimeout(cur.longt),cur.p1=[scrollX+e.clientX+p[0],scrollY+e.clientY+p[1]],cur.down=0,render());
+	onpointermove=e=>e.isPrimary&&cur.type&&(
+		clearTimeout(cur.longt),cur.p1=[scrollX+e.clientX,scrollY+e.clientY],
+		cur.type=='single'&&scroll(cur.p0.map((x,i)=>cur._p[i]-(cur.p1[i]-x))),
+		render(cur.type=='single')
+	);
+	onpointerup=e=>e.isPrimary&&(
+		clearTimeout(cur.longt),cur.p1=[scrollX+e.clientX,scrollY+e.clientY],
+		render(cur.type=='single'),
+		cur.type=null
+	);
 
 
 	(onresize=(e,dpr=devicePixelRatio,bcr=c.getBoundingClientRect())=>(
