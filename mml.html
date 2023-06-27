@@ -14,8 +14,9 @@
 </head>
 <body>
 <style>textarea{font-family:monospace!important;width:100%;}pre{overflow:auto;}</style>
-<textarea id="ta" class="zab" spellcheck="false"></textarea>
-<pre>
+<details open>
+	<summary>v0 undfined</summary>
+	<pre>
 TPM(tickPerMinute)=BPM/minNote*beat;
 
 x0000 : パート設定(低音域?1bit,音量半分?1bit,1/8パルス?1bit,減衰なし?1bit)(初期値未定義)
@@ -26,15 +27,34 @@ T : 音価メモリ1セット
 1~32 : 音価セット(音価メモリ切替を積極的に用いること)(初期値未定義)
 cdefgab : 音名(大文字半音上げ)(音名以外でのパート終了は未定義)
 r : 休符
-, : パート分け
-</pre>
+, : パート分け		
+		</pre>
+</details>
+<details>
+	<summary>v1</summary>
+	<pre>
+tpm: TPM(tickPerMinute)=BPM/minNote*beat;
+loop: (truthy|falsy)
+notes:
+
+	x000 : パート設定(音量半分?,1/8パルス?,減衰無し?)(途中で変更可)
+	> : オクターブ上げ(初期値4)
+	< : オクターブ下げ
+	1~32 : 音価セット(音価メモリ切替を積極的に用いること)(初期値2)
+	cdefgab : 音名(大文字半音上げ)
+	r : 休符
+	, : パート分け
+
+		</pre>
+</details>
 <button id="runbtn" class="zab bgca">run</button>
 <button id="stpbtn" class="zab bgca">stop</button>
 <button class="zab bgca" onclick="location.hash='';">clear</button>
 <pre id="log"></pre>
-<a id="a2gui">open gui editor</a>
 <script type="module">
-	import TA from'https://mcbeeringi.github.io/ta/ta+.mjs';
+	import{EditorView,basicSetup}from'https://mcbeeringi.github.io/src/cm/codemirror.js';
+	import{oneDark}from'https://mcbeeringi.github.io/src/cm/@codemirror-theme-one-dark.js';
+	import{javascript}from 'https://mcbeeringi.github.io/src/cm/@codemirror-lang-javascript.js';
 	let stop;
 	const
 	actx=new(window.AudioContext||webkitAudioContext)(),
@@ -42,53 +62,48 @@ r : 休符
 		n=[...Array(Math.log2(w.length))],br=x=>n.reduce((a,_,i)=>(a<<1)|(x>>>i&1),0),trs=x=>x[0].map((_,i)=>x.map(y=>y[i])),
 		pm=(a,b,[c,d])=>[[a+c,b+d],[a-c,b-d]],mul=(a,b,c,d)=>[a*c-b*d,a*d+b*c],core=([a,b],[c,d],t)=>pm(a,b,mul(c,d,Math.cos(t*=-Math.PI),Math.sin(t)))
 	)=>trs(n.reduce((a,x,i)=>(x=2**i,[...Array(a.length/2)].forEach((_,j)=>[a[i+j],a[i+j+x]]=core(a[(i=(j/x|0)*x*2)+(j%=x)],a[i+j+x],j/x)),a),w.map((_,i)=>[w[br(i)],0]))))(),
-	pwav=[[1,1,0,0],[1,0,0,0]].map(w=>actx.createPeriodicWave(...fft(w.flatMap(x=>Array(4096/w.length).fill(x*2-1))).map(x=>new Float32Array([0,...x.slice(1)])))),
-	parse=({notes:n,tpm,loop})=>(
-		n=n.split(',').map(_=>(_.match(/[<>a-gr]|\d+|x\d{4}|t/ig)||[]).reduce((a,x)=>(
-			(isNaN(x)?{
-				'<':_=>a.o--,'>':_=>a.o++,
-				...[...'c_d_ef_g_a_br'].reduce((b,y,i)=>(y!='_'&&(b[y]=_=>(a.ta+=a.t[a.ti],a.a.push(1<<7|a.ti<<6|(a.o&3)<<4|i+(x==x.toUpperCase())))),b),{}),
-				t:_=>a.ti=+(x=='T'),x:_=>a.a.push(+('0b0010'+x.slice(-4)))
-			}[x.slice(0,1).toLowerCase()]:(_=>(a.t[a.ti]=+x,a.a.push(1<<6|a.ti<<5|(x-1)&0x1f))))(),
-			a
-		),{a:[0],o:0,t:[0,0],ti:0,ta:0})),
-		n[n.reduce((a,x,i)=>(x.ta<a.a||(a.a=x.ta,a.i=i),a),{a:0,i:-1}).i].a.push(1),
-		[(tpm>>3)&0xff,(tpm<<5|!!loop)&0xff,...n.flatMap(x=>x.a),0,0]
-	);
-	self.play=w=>(
-		w=w.slice(2).reduce((a,x)=>(x>1?(
-			[
-				_=>a.cfg=x&0x1f,
-				_=>a.t[x>>5&1]=x&0x1f,
-				(l=x>>6&1,o=x>>4&3,n=x&15)=>(n<12&&((osc=actx.createOscillator(),g=actx.createGain(),t=a.t0+a.a*a.dt,d=(a.t[l]+1)*a.dt)=>(
-					osc.setPeriodicWave(pwav[a.cfg>>1&1]),
-					osc.frequency.value=13.75*(2**((n+3)/12+o+(a.cfg>>3&1?1:4))),// A-1
-					g.gain.value=[1,.5][a.cfg>>2&1]*.2,
-					(a.cfg&1)||g.gain.setTargetAtTime(0,t,.2),
-					[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
-					osc.start(t),osc.stop(t+d),
-					a.s.push(_=>osc.stop())
-				))(),a.a+=a.t[l]+1)
-			][[...Array(2)].reduce((a,_,i)=>a+((1<<(7-i))<=x),0)]()
-		):(a.a=0,a.t=[],a.cfg),a),{dt:60/(w[0]<<3|w[1]>>5),s:[],t0:actx.currentTime+.05}).s,
-		_=>w.forEach(x=>x())
-	);
+	pwav=[[1,1,0,0],[1,0,0,0]].map(w=>actx.createPeriodicWave(...fft(w.flatMap(x=>Array(4096/w.length).fill(x*2-1))).map(x=>new Float32Array([0,...x.slice(1)]))));
 
-	runbtn.onclick=w=>(
-		stpbtn.onclick(),
-		location.hash=encodeURIComponent(ta.value),
-		w=Function('return '+ta.value)(),
-		w.notes=parse(w),
-		log.textContent=`const uint8_t ${w.title}[]={// ${w.notes.length}bytes\n\t${(''+w.notes).replace(/,0,/g,',\n\t0,')}\n};\n`,
-		document.title=`${w.title} t202`,
-		a2gui.href='gui.html#'+btoa(String.fromCharCode(...w.notes)),
-		stop=play(w.notes)
-	);
-	stpbtn.onclick=_=>stop&&(stop(),stop=null);;
-	log.onclick=_=>navigator.clipboard.writeText(log.textContent);
+	Object.assign(self,{
+		parse_v0:({notes:n,tpm,loop})=>(
+			n=n.split(',').map(_=>(_.match(/[<>a-gr]|\d+|x\d{4}|t/ig)||[]).reduce((a,x)=>(
+				(isNaN(x)?{
+					'<':_=>a.o--,'>':_=>a.o++,
+					...[...'c_d_ef_g_a_br'].reduce((b,y,i)=>(y!='_'&&(b[y]=_=>(a.ta+=a.t[a.ti],a.a.push(1<<7|a.ti<<6|(a.o&3)<<4|i+(x==x.toUpperCase())))),b),{}),
+					t:_=>a.ti=+(x=='T'),x:_=>a.a.push(+('0b0010'+x.slice(-4)))
+				}[x.slice(0,1).toLowerCase()]:(_=>(a.t[a.ti]=+x,a.a.push(1<<6|a.ti<<5|(x-1)&0x1f))))(),
+				a
+			),{a:[0],o:0,t:[0,0],ti:0,ta:0})),
+			n[n.reduce((a,x,i)=>(x.ta<a.a||(a.a=x.ta,a.i=i),a),{a:0,i:-1}).i].a.push(1),
+			[(tpm>>3)&0xff,(tpm<<5|!!loop)&0xff,...n.flatMap(x=>x.a),0,0]
+		),
+		parse_v1:({notes:n,tpm,loop})=>(
 
-	location.hash&&(ta.value=decodeURIComponent(location.hash.slice(1)));
-	!ta.value&&(ta.value=`{
+			n[n.reduce((a,x,i)=>(x.ta<a.a||(a.a=x.ta,a.i=i),a),{a:0,i:-1}).i].a.push(1),
+			[(tpm>>3)&0xff,(tpm<<5|!!loop)&0xff,...n.flatMap(x=>x.a),0,0]
+		),
+		parse:w=>self['parse_v'+(w.v||0)](w),
+		play:w=>(
+			w=w.slice(2).reduce((a,x)=>(x>1?(
+				[
+					_=>a.cfg=x&0x1f,
+					_=>a.t[x>>5&1]=x&0x1f,
+					(l=x>>6&1,o=x>>4&3,n=x&15)=>(n<12&&((osc=actx.createOscillator(),g=actx.createGain(),t=a.t0+a.a*a.dt,d=(a.t[l]+1)*a.dt)=>(
+						osc.setPeriodicWave(pwav[a.cfg>>1&1]),
+						osc.frequency.value=13.75*(2**((n+3)/12+o+(a.cfg>>3&1?1:4))),// A-1
+						g.gain.value=[1,.5][a.cfg>>2&1]*.2,
+						(a.cfg&1)||g.gain.setTargetAtTime(0,t,.2),
+						[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
+						osc.start(t),osc.stop(t+d),
+						a.s.push(_=>osc.stop())
+					))(),a.a+=a.t[l]+1)
+				][[...Array(2)].reduce((a,_,i)=>a+((1<<(7-i))<=x),0)]()
+			):(a.a=0,a.t=[],a.cfg),a),{dt:60/(w[0]<<3|w[1]>>5),s:[],t0:actx.currentTime+.05}).s,
+			_=>w.forEach(x=>x())
+		),
+		cm:	new EditorView({
+			doc:location.hash?decodeURIComponent(location.hash.slice(1)):`{
+	v:0,
 	title:'famima',
 	tpm:80*8/4,
 	loop:false,
@@ -96,8 +111,25 @@ r : 休符
 		x0000 >1Fd<a>deT3ateFe<a>4d,
 		x0000 2rF>T3C1<etaa4F
 	\`
-}`);
-	TA.editor(ta);
+}`,
+			extensions:[basicSetup,oneDark,javascript()]
+		})
+	});
+
+	runbtn.onclick=w=>(
+		stpbtn.onclick(),
+		location.hash=encodeURIComponent(cm.state.doc),
+		w=Function('return '+cm.state.doc)(),
+		w.notes=parse(w),
+		log.textContent=`const uint8_t ${w.title}[]={// ${w.notes.length}bytes\n\t${(''+w.notes).replace(/,0,/g,',\n\t0,')}\n};\n`,
+		document.title=`${w.title} t202`,
+		console.log('gui.html#'+btoa(String.fromCharCode(...w.notes))),
+		stop=play(w.notes)
+	);
+	stpbtn.onclick=_=>stop&&(stop(),stop=null);;
+	log.onclick=_=>navigator.clipboard.writeText(log.textContent);
+
+	document.body.prepend(cm.dom);
 </script>
 </body>
 </html>

@@ -54,3 +54,19 @@ track
 			break;
 0 0 2byte
 ```
+
+
+## 使い方
+### 各種ツール インストール
+```
+scoop install avr-gcc
+```
+avr-gcc, avr-size, avr-objcopy, avrdude, make
+がインストールされたことを確認
+
+### コンパイル
+`make`
+
+### 書き込み
+MakeFileのCOMポートを確認
+`make write`
