@@ -70,3 +70,7 @@ avr-gcc, avr-size, avr-objcopy, avrdude, make
 ### 書き込み
 MakeFileのCOMポートを確認
 `make write`
+
+### PCB
+KiCADのデータがあるかも
+[pcb-stuff](https://github.com/mcbeeringi/pcb-stuff)
