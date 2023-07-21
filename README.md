@@ -1,7 +1,7 @@
-# avr_musicbox
+# avr-musicbox
 avrマイコンとスピーカだけで作れる和音再生可能な電子オルゴール
 
-[GitHub](https://github.com/mcbeeringi/avr_musicbox/)
+[GitHub](https://github.com/mcbeeringi/avr-musicbox/)
 ## 機能
 - avrとスピーカーの直結可
 - タクトスイッチとLED
