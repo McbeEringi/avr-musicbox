@@ -7,7 +7,7 @@
 #define MTRKS 4
 #define BTN_DOWN ~VPORTA.IN&(1<<7)
 #define FOR(X) for(uint8_t i=0;i<X;i++)
-void wait(){while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=TCB_CAPT_bm;}// TCB0待ち(25us) 解除
+void wait(){while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=1;}// TCB0待ち(25us) 1書いて解除
 void wait_btn(){while(BTN_DOWN)FOR(255)wait();}// 0.025*255=6.375ms
 
 const uint16_t n0[]={2446,2309,2179,2057,1942,1833,1730,1633,1541,1455,1373,1296};// C0~B0
@@ -70,13 +70,13 @@ static void play(const uint8_t *s){
 
 void main(){
 	// TCA0 疑似DAC 可能な限り高速な方が良い 20MHz/(8bit=2**8)=78.125kHz
-	TCA0.SINGLE.CTRLA=TCA_SINGLE_ENABLE_bm;// TCA有効
+	TCA0.SINGLE.CTRLA=TCA_SINGLE_ENABLE_bm;// 分周無し TCA有効
 	TCA0.SINGLE.CTRLB=TCA_SINGLE_CMP2EN_bm|TCA_SINGLE_WGMODE_SINGLESLOPE_gc;// TCA0 wo2有効 単傾斜PWM
 	TCA0.SINGLE.PER=0xff;// TOP 8bit
 
 	// TCB0 波形生成 これが解像度 可聴域上端の2倍弱あれば何とかなる 20MHz/500=40kHz
-	TCB0.CTRLA=TCB_CLKSEL_CLKTCA_gc|TCB_ENABLE_bm;// TCAとクロック共有 TCB有効
-	TCB0.CTRLB=TCB_CNTMODE_INT_gc;// 周期的割り込み動作
+	TCB0.CTRLA=TCB_ENABLE_bm;// 分周無し TCB有効
+	// TCB0.CTRLB=TCB_CNTMODE_INT_gc;// 周期的割り込み動作
 	TCB0.CCMP=499;// TOP
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
