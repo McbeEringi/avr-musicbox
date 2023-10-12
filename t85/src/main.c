@@ -112,5 +112,6 @@ void main(){
 		blink(0b00110011);sleep();play(yobikomi);
 		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
 		blink(0b00110011);sleep();play(allback);
+		blink(0b00110011);sleep();play(dbfl);
 	}
 }
