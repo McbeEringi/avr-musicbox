@@ -1,6 +1,6 @@
 ({
-	tpm:168*16/4,
 	title:'kewpie',
+	tpm:168*16/4,
   loop:false,
 	notes:`
     x0010

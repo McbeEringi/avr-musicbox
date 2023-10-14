@@ -1,6 +1,6 @@
 ({
-	tpm:130*16/4,
 	title:'small_world',
+	tpm:130*16/4,
   loop:true,
 	notes:`
 		x0010 2b>c
