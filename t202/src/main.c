@@ -1,3 +1,11 @@
+/*
+ピン
+
+PA2 WAVE
+PA3 LED
+PA7 SW
+*/
+
 #define F_CPU 20000000 // 念のため
 #include <avr/io.h>
 #include <avr/interrupt.h>

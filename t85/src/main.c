@@ -1,3 +1,12 @@
+/*
+ピン
+
+PB0 SW
+PB1 LED
+PB3 LOW
+PB4 WAVE
+*/
+
 #define DIGISPARK
 #ifdef DIGISPARK
 	#define F_CPU 16500000// 16.5MHz
