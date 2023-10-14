@@ -57,6 +57,6 @@
 		20G>T16c<4G>c<G tg>12c<Tgefg
 		24ftg4gab>8c<T2b>1c<btaT4gtfT2e1fetdT4c
 		24rrrrrrtgT2g1agtfT2f1gfteT2e1fetdT2d1ed
-		32c
+		32cr
 	`
 })
