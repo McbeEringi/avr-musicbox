@@ -106,12 +106,16 @@ void main(){
 	TIMSK =0;         // [タイマー割り込み許可レジスタ] 無効
 	TCNT0 =0;TCNT1 =0;// [タイマー] リセット
 	while(1){
+
 		blink(0b00110011);sleep();play(famima);
 		blink(0b00110011);sleep();play(ofuro);
-		blink(0b00110011);sleep();play(nyan);
 		blink(0b00110011);sleep();play(yobikomi);
+		blink(0b00110011);sleep();play(nyan);
+		blink(0b00110011);sleep();play(small_world);
+		blink(0b00110011);sleep();play(kewpie);
+		// blink(0b00110011);sleep();play(dbfl);
+		blink(0b00110011);sleep();play(sanpo);
 		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
 		blink(0b00110011);sleep();play(allback);
-		blink(0b00110011);sleep();play(dbfl);
 	}
 }

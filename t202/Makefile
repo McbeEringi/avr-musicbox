@@ -28,4 +28,4 @@ size: .tmp/$(TARGET).out
 	avr-size .tmp/$(TARGET).out
 
 write: $(TARGET).hex
-	avrdude -p t202 -c serialupdi -P COM3 -U flash:w:$(TARGET).hex:a
+	avrdude -p t202 -c serialupdi -P COM5 -U flash:w:$(TARGET).hex:a
