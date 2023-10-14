@@ -1,0 +1,41 @@
+({
+	tpm:168*16/4,
+	title:'kewpie',
+  loop:false,
+	notes:`
+    x0010
+		2r>T1ggtggee4f2rTggtggCC4d2rTggt8gd<g>4r2gTgg
+		tergrgrrTggtfrgrgrrTggtergrbrargFfedrrTgg
+		tergrgrrTggtdrbrbrrTaatarar>drd<rT4g1gGaAtbgag
+		ergregrgfrgrfgrgergrbrargFfedrrTgg
+		tergrgrrTggtfrarar>crerT4rtdrTr
+		tc<1gGaA2b>c<<rTc,
+
+    x0010 
+		8r>2CCT4drr<tAATbrtr>T8FctrTg4r
+    x1010>
+		trgrgrgrgrgrgrgrgrgrgrgrgrgrgrgrg
+		rgrgrgrgrbrbrbrbrarararaTgrrr
+		trgrgrgrgrgrgrgrgrgrgrgrgrgrgrgrg
+		rgrgrgrgrarararargrgrgrg
+		grTr>tcr<Tc,
+
+    x0010
+		20rr>8f<bT4rtg
+    x1010>>
+		2rererererfrfrfrfrererererfrfrfrf
+		rerererergrgrgrgrFrFrFrFT16r
+		trererererfrfrfrfrererererfrfrfrf
+		rererererfrfrfrfrerdrfrf
+		erT4rr<c,
+
+    x0010
+		21rr>T8e<at2rTr
+    x1010>>
+		t4c<gcgdgdg>c<gcgdgdg
+		>c<gcgdgdgadFdgrTr
+		>tc<g>cc<gdgg>c<g>cc<gdgg
+		>c<g>cc<fcff>c<gdg
+		>2c
+	`
+})
