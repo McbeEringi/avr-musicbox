@@ -4,6 +4,9 @@ avrマイコンとスピーカだけで作れる和音再生可能な電子オ�
 
 [GitHub](https://github.com/mcbeeringi/avr-musicbox/)
 
+参考元
+<https://hello-world.blog.ss-blog.jp/search/?keyword=%E9%9F%B3%E6%A5%BD%E3%82%92%E6%BC%94%E5%A5%8F%E3%81%97%E3%81%9F%E3%81%84>
+
 ## 機能
 
 - avrとスピーカーの直結可
