@@ -7,12 +7,6 @@ PB3 LOW
 PB4 WAVE
 */
 
-#define DIGISPARK
-#ifdef DIGISPARK
-	#define F_CPU 16500000// 16.5MHz
-#else
-	#define F_CPU 8000000// 8MHz
-#endif
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
@@ -106,7 +100,7 @@ void main(){
 	TCCR1 =0b00000001;// [タイマー1制御レジスタ A] CTC1 PWM1A COM1A1 COM1A0 CS13 CCS12 CS11 CS10 : 分周無し
 	GTCCR =0b01100000;// [タイマー1制御レジスタ B] TSM PWM1B COM1B1 COM1B0 FOC1B FOC1A PSR1 PSR0 : PWM1B PB4のみ有効
 	PLLCSR=0b00000111;// [PLL制御状態レジスタ] LSM - - - - PCKE PLLE PLOCK : 通常動作, PCK PLL Plock許可 64MHz動作
-	OCR1B=0;OCR1C=255;// [タイマー1レジスタBC] 64e6/256=250kHz動作
+	OCR1B=0;OCR1C=0xff;// [タイマー1レジスタBC] 64e6/256=250kHz動作
 
 	// DDRB PORTB:state, 00:IN_HI-Z, 01:IN_P-UP, 10:OUT_L, 11:OUT_H
 	DDRB  =0b00011110;// [ポートB方向レジスタ] OUT : PB1,2,3,4

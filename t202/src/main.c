@@ -6,7 +6,6 @@ PA3 LED
 PA7 SW
 */
 
-#define F_CPU 20000000 // 念のため
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
@@ -85,7 +84,7 @@ void main(){
 	// TCB0 波形生成 これが解像度 可聴域上端の2倍弱あれば何とかなる 20MHz/500=40kHz
 	TCB0.CTRLA=TCB_ENABLE_bm;// 分周無し TCB有効
 	// TCB0.CTRLB=TCB_CNTMODE_INT_gc;// 周期的割り込み動作
-	TCB0.CCMP=499;// TOP
+	TCB0.CCMP=F_CPU/4e4-1;// TOP
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
 	PORTA.DIRSET=0b1100;// 出力: PA3,2

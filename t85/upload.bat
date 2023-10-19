@@ -1,2 +1,0 @@
-make size
-make write
