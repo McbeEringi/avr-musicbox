@@ -91,6 +91,6 @@ void main(){
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない 
 
 	while(1){
-		blink(0b00110011);sleep();play(sanpo);
+		blink(0b00110011);sleep();play(jb);
 	}
 }
