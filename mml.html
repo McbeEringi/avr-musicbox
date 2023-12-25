@@ -36,10 +36,14 @@ r : 休符 パートを途中で終了する場合はrを最後に付ける
 <pre id="log" class="zab"></pre>
 <script type="module">
 	import{EditorView,keymap,showPanel,setup}from'https://mcbeeringi.github.io/src/cm.mjs';
-	import{javascript}from 'https://mcbeeringi.github.io/src/cm/@codemirror-lang-javascript.js';
+	import{javascript}from'https://mcbeeringi.github.io/src/cm/@codemirror-lang-javascript.js';
+	import{ab2wav}from'https://mcbeeringi.github.io/petit/audio.mjs';
+	import{dl}from'https://mcbeeringi.github.io/petit/zip.mjs';
 	let stop;
 	const
-	actx=new(window.AudioContext||webkitAudioContext)(),
+	actx=new(self.AudioContext||webkitAudioContext)(),
+	msd=actx.createMediaStreamDestination(),
+	mr=self.MediaRecorder&&new MediaRecorder(msd.stream),
 	fft=w=>((
 		n=[...Array(Math.log2(w.length))],br=x=>n.reduce((a,_,i)=>(a<<1)|(x>>>i&1),0),trs=x=>x[0].map((_,i)=>x.map(y=>y[i])),
 		pm=(a,b,[c,d])=>[[a+c,b+d],[a-c,b-d]],mul=(a,b,c,d)=>[a*c-b*d,a*d+b*c],core=([a,b],[c,d],t)=>pm(a,b,mul(c,d,Math.cos(t*=-Math.PI),Math.sin(t)))
@@ -60,28 +64,31 @@ r : 休符 パートを途中で終了する場合はrを最後に付ける
 			[(tpm>>3)&0xff,(tpm<<5|!!loop)&0xff,...n.flatMap(x=>x.a),0,0]
 		),
 		play:w=>(
-			w=w.slice(2).reduce((a,x)=>(x>1?(
+			mr&&(setTimeout(_=>mr.start(),50),mr._stop=_=>(mr.stop(),mr._stop=_=>_)),
+			w=w.slice(2).reduce((a,x)=>(x?(
 				[
-					_=>a.cfg=x&0x1f,
-					_=>a.t[x>>5&1]=x&0x1f,
 					(l=x>>6&1,o=x>>4&3,n=x&15)=>(n<12&&((osc=actx.createOscillator(),g=actx.createGain(),t=a.t0+a.a*a.dt,d=(a.t[l]+1)*a.dt)=>(
 						osc.setPeriodicWave(pwav[a.cfg>>1&1]),
 						osc.frequency.value=13.75*(2**((n+3)/12+o+(a.cfg>>3&1?1:4))),// A-1
 						g.gain.value=[1,.5][a.cfg>>2&1]*.2,
 						(a.cfg&1)||g.gain.setTargetAtTime(0,t,.2),
-						[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),
+						[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),mr&&g.connect(msd),
 						osc.start(t),osc.stop(t+d),
 						a.s.push(_=>osc.stop())
-					))(),a.a+=a.t[l]+1)
-				][[...Array(2)].reduce((a,_,i)=>a+((1<<(7-i))<=x),0)]()
+					))(),a.a+=a.t[l]+1),
+					_=>a.t[x>>5&1]=x&0x1f,
+					_=>a.cfg=x&0x1f,
+					,,,,_=>setTimeout(_=>mr&&mr._stop(),a.a*a.dt*1000)
+				][[...Array(8)].reduce((a,_,i)=>!~a&&(1<<(7-i))<=x?i:a,-1)]()
 			):(a.a=0,a.t=[],a.cfg),a),{dt:60/(w[0]<<3|w[1]>>5),s:[],t0:actx.currentTime+.05}).s,
-			_=>w.forEach(x=>x())
+			_=>w.forEach(x=>x(),mr&&mr._stop())
 		),
 		cm:	new EditorView({
 			doc:location.hash?decodeURIComponent(location.hash.slice(1)):`({
 	title:'famima',
 	tpm:80*8/4,
 	loop:false,
+	//wav:'mml_recorded',// enablie this line to automaticly record and download
 	notes:\`
 		x0000 >1Fd<a>deT3ateFe<a>4d,
 		x0000 2rF>T3C1<etaa4F
@@ -101,9 +108,14 @@ r : 休符 パートを途中で終了する場合はrを最後に付ける
 		log.textContent=`const uint8_t ${w.title}[]={// ${w.notes.length}bytes\n\t${(''+w.notes).replace(/,0,/g,',\n\t0,')}\n};\n`,
 		document.title=`${w.title} t202`,
 		console.log('gui.html#'+btoa(String.fromCharCode(...w.notes))),
+		mr&&(mr.ondataavailable='wav'in w?async x=>(
+			x=await new Response(x.data).arrayBuffer(),
+			x=await new Promise((f,r)=>actx.decodeAudioData(x,f,r)),
+			dl({name:w.wav,buffer:new Blob([ab2wav(x)],{MimeType:'audio/wave'})})
+		):_=>_),
 		stop=play(w.notes)
 	);
-	stpbtn.onclick=_=>stop&&(stop(),stop=null);;
+	stpbtn.onclick=_=>stop&&(stop(),stop=null);
 	log.onclick=_=>navigator.clipboard.writeText(log.textContent);
 
 	document.body.prepend(cm.dom);
