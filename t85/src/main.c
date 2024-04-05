@@ -112,6 +112,7 @@ void main(){
 
 		blink(0b00110011);sleep();play(famima);
 		blink(0b00110011);sleep();play(ofuro);
+		blink(0b00110011);sleep();play(surfboard);
 		blink(0b00110011);sleep();play(jingle);play(yobikomi);
 		blink(0b00110011);sleep();play(jingle_bell);
 		blink(0b00110011);sleep();play(nyan);
