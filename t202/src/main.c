@@ -15,9 +15,16 @@ PA7 SW
 #define BTN_DOWN ~VPORTA.IN&(1<<7)
 #define FOR(X) for(uint8_t i=0;i<X;i++)
 void wait(){while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=1;}// TCB0待ち(25us) 1書いて解除
-void wait_btn(){while(BTN_DOWN)FOR(255)wait();}// 0.025*255=6.375ms
+#ifdef DOORBELL
+	#define wait_btn()
+#else
+	void wait_btn(){while(BTN_DOWN)FOR(255)wait();}// 0.025*255=6.375ms
+#endif
 
 const uint16_t n0[]={2446,2309,2179,2057,1942,1833,1730,1633,1541,1455,1373,1296};// C0~B0
+#ifdef DOORBELL
+	uint8_t BTNSTAT=0;
+#endif
 
 static void sleep(){uint8_t d=VPORTA.DIR;VPORTA.DIR=0;sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;sleep_cpu();cli();wait_btn();VPORTA.DIR=d;}// avr/sleep.hが仕事しないので手動設定
 ISR(PORTA_PORT_vect){PORTA.INTFLAGS=PORT_INT7_bm;}// リセット必須
@@ -37,6 +44,12 @@ static void play(const uint8_t *s){
 	n[MTRKS]={},_n[MTRKS],// 音高
 	env,// 減衰カウンタ
 	dt=24e5/(h>>5),_dt;// 最小音価 40000*60/TPM
+
+	#ifdef DOORBELL
+		h&=0xfe;// ループフラグ下げ
+		uint8_t *_s=s;// 頭出し用に二重保存
+		head:s=_s;
+	#endif
 
 	ntrks=0;
 	while(ntrks<MTRKS){if(*s++==0){if(*s==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
@@ -66,13 +79,21 @@ static void play(const uint8_t *s){
 			}
 			TCA0.SINGLE.CMP2BUF=out;
 			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=384;}// 減衰 9.6ms毎
-			if(BTN_DOWN)goto fin;// ボタン離脱
+			#ifdef DOORBELL
+				if(BTN_DOWN&&!BTNSTAT){BTNSTAT=BTN_DOWN;goto head;}// 再生途中で頭出し
+				BTNSTAT=BTN_DOWN;
+			#else
+				if(BTN_DOWN)goto fin;// ボタン離脱
+			#endif
 			wait();
 		}
 		dc:if(!(h&1))break;// ループ
 	}
 	fin:TCA0.SINGLE.CMP2BUF=0;
 	wait_btn();
+	#ifdef DOORBELL
+		if(BTN_DOWN){PORTA.PIN7CTRL^=PORT_INVEN_bm;sleep();PORTA.PIN7CTRL^=PORT_INVEN_bm;}
+	#endif
 }
 
 void main(){
@@ -88,7 +109,10 @@ void main(){
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
 	PORTA.DIRSET=0b1100;// 出力: PA3,2
-	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない 
+	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない
+	#ifdef DOORBELL
+		PORTA.PIN7CTRL|=PORT_INVEN_bm;// 閉扉==ショート
+	#endif
 
 	while(1){
 		blink(0b00110011);sleep();play(jingle_bell);
