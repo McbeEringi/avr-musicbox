@@ -1,9 +1,9 @@
 /*
 ピン
 
-PA2 WAVE
-PA3 LED
-PA7 SW
+WAVE: tX02 ? PA2 : PB2
+LED: PA3
+SW : PA7
 */
 
 #include <avr/io.h>
@@ -108,7 +108,12 @@ void main(){
 	TCB0.CCMP=F_CPU/4e4-1;// TOP
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
-	PORTA.DIRSET=0b1100;// 出力: PA3,2
+	#ifdef TX02
+		PORTA.DIRSET=0b1100;// 出力: PA2,3
+	#else
+		PORTA.DIRSET=0b1000;// 出力: PA3
+		PORTB.DIRSET=0b0100;// 出力: PB2
+	#endif
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない
 	#ifdef DOORBELL
 		PORTA.PIN7CTRL|=PORT_INVEN_bm;// 閉扉==ショート
