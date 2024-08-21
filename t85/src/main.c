@@ -111,6 +111,7 @@ void main(){
 	while(1){
 
 		blink(0b00110011);sleep();play(famima);
+		blink(0b00110011);sleep();play(kakko);
 		blink(0b00110011);sleep();play(ofuro);
 		blink(0b00110011);sleep();play(jingle);play(yobikomi);
 		blink(0b00110011);sleep();play(jingle_bell);
