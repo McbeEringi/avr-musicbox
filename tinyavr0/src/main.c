@@ -108,11 +108,11 @@ void main(){
 	TCB0.CCMP=F_CPU/4e4-1;// TOP
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
-	#ifdef TX02
-		PORTA.DIRSET=0b1100;// 出力: PA2,3
-	#else
+	#ifdef USE_PB2
 		PORTA.DIRSET=0b1000;// 出力: PA3
 		PORTB.DIRSET=0b0100;// 出力: PB2
+	#else
+		PORTA.DIRSET=0b1100;// 出力: PA2,3
 	#endif
 	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない
 	#ifdef DOORBELL
@@ -120,6 +120,20 @@ void main(){
 	#endif
 
 	while(1){
-		blink(0b00110011);sleep();play(jingle_bell);
+		#if 8<=SIZE
+			blink(0b00110011);sleep();play(famima);
+			blink(0b00110011);sleep();play(kakko);
+			blink(0b00110011);sleep();play(ofuro);
+			blink(0b00110011);sleep();play(jingle);play(yobikomi);
+			blink(0b00110011);sleep();play(jingle_bell);
+			blink(0b00110011);sleep();play(petrouchka);
+			blink(0b00110011);sleep();play(nyan);
+			blink(0b00110011);sleep();play(small_world);
+			blink(0b00110011);sleep();play(kewpie);
+			blink(0b00110011);sleep();play(dw3battle);play(dw3level);
+			blink(0b00110011);sleep();play(allback);
+		#else
+			blink(0b00110011);sleep();play(jingle_bell);
+		#endif
 	}
 }
