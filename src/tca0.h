@@ -6,6 +6,18 @@
 // #define WO_ALT
 // #define WO_CH 0 // 0,1,2
 
+
+#if (WO_CH==0)
+	#define WO_CMPnEN TCA_SINGLE_CMP0EN_bm
+	#define WO_CMPnBUF TCA0.SINGLE.CMP0BUF
+#elif (WO_CH==1)
+	#define WO_CMPnEN TCA_SINGLE_CMP1EN_bm
+	#define WO_CMPnBUF TCA0.SINGLE.CMP1BUF
+#elif (WO_CH==2)
+	#define WO_CMPnEN TCA_SINGLE_CMP2EN_bm
+	#define WO_CMPnBUF TCA0.SINGLE.CMP2BUF
+#endif
+
 #if (
 	defined(TINYAVR_8PIN)
 )
