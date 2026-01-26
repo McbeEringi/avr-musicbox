@@ -1,8 +1,7 @@
 ({
-	title:'sh1-1',
+	title:'sh1',
 	tpm:140*8/4,
 	loop:false,
-	//wav:'mml_recorded',// enablie this line to automaticly record and download
 	notes:`
 		x0000>
 		1rg>cd2ec
