@@ -10,7 +10,10 @@ SW : PA7
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 #include "seq.h"
-#include "sh.h"
+#include "depmel/sf.h"
+#include "depmel/sh.h"
+#include "depmel/sw.h"
+#include "depmel/teitiku.h"
 
 #define MTRKS 4
 #define BTN_DOWN ~VPORTA.IN&(1<<7)
@@ -127,6 +130,9 @@ void main(){
 			// PORTA.OUTSET=0b1000000;
 
 	while(1){
+		blink(0b00110011);sleep();play(sf_3);
+		blink(0b00110011);sleep();play(haru_new);
+
 		blink(0b00110011);sleep();play(sh1);
 		blink(0b00110011);sleep();play(sh2);
 		blink(0b00110011);sleep();play(sh3);
@@ -136,6 +142,18 @@ void main(){
 		blink(0b00110011);sleep();play(sh7);
 		blink(0b00110011);sleep();play(sh8);
 		blink(0b00110011);sleep();play(sh9);
+
+		blink(0b00110011);sleep();play(gota_del_vient);
+		blink(0b00110011);sleep();play(verde_rayo);
+		blink(0b00110011);sleep();play(water_crown);
+		blink(0b00110011);sleep();play(ciello_estrellado);
+		blink(0b00110011);sleep();play(moon_stone);
+		blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
+		blink(0b00110011);sleep();play(mori_no_yousei);
+		blink(0b00110011);sleep();play(asatuyu);
+
+		blink(0b00110011);sleep();play(azamino);
+		blink(0b00110011);sleep();play(holiday);
 		// #if 8<=SIZE
 		// 	blink(0b00110011);sleep();play(famima);
 		// 	blink(0b00110011);sleep();play(kakko);
