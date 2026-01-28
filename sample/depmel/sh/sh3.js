@@ -20,4 +20,3 @@
 		x1000>>32bb>dd 32f
 	`//.replace(/\/\/(.*)$/gm,(_,x)=>x.replace(/[a-gA-G]/g,'r'))
 })
-

@@ -1,21 +1,20 @@
 ({
 	title:'sh2',
-	tpm:164*8/4,
+	tpm:164*32/4,
 	loop:false,
 	notes:`
-	x0010 1
-		DFbA2bF1
+	x0010 4
+		DFbA8bF4
 		eG>C<bAGAF
-		Fa>dC2d<a1
-		gb>edC<b>C<a>
-		d<aga4F,
+		Fa>dC8d<a4
+		gb>e5dC<b>C<a>
+		d<aga20F,
 		
 		x1000 >>
-		5b1b>CD
-		2eCFe
-		5d1deF
-		2gea<a>
-		8d
+		20b4b>CD
+		8eCFe
+		20d4deF
+		8g9e10a<a>
+		32d
 	`
 })
-
