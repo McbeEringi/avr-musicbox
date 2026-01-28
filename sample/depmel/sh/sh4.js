@@ -1,0 +1,23 @@
+({
+	title:'sh4',
+	tpm:188*32/4,
+	loop:false,
+	notes:`
+		x0010 >
+		12C<bAb>8C<b>
+		12C<bAb>8C<b>
+		3r29d,
+		x0000
+		4r6drdrdrd2r16r
+		4r6drdrdrd2r16r
+		x00102r30A,
+		x0000
+		8r6FrFrFr8FF4F
+		8r6FrFrFr8FF4F
+		x00101r31f,
+		x1000>>
+		12aaGa8aa
+		12aaGa8aa
+		32G
+	`
+})

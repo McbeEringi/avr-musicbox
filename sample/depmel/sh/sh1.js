@@ -1,28 +1,29 @@
 ({
 	title:'sh1',
-	tpm:140*8/4,
+	tpm:180*32/4,
 	loop:false,
 	notes:`
-		x0000>
-		1rg>cd2ec
-		1fedc<b>cd<b>
-		c<g>cd2ec
-		1agfedefd
-		2eg>4c,
+		x0010
+		4rg>cd8ec
+		4fedc<b>cd<b>
+		c<g>cd8ec
+		4agf5edefd
+		2r10e11g>20c,
 
-		x0000>
-		8rrr
-		1fedc<b>cd<b>
-		2cc4e,
+		x0010 >
+		32rrr
+		4fed5c<b>cd<b>
+		1r10cc20e,
 
-		x0000>
-		4r1rgeg4aG
-		4r1rgeg4aG
-		8g,
+		x0010
+		16r4rgeg x0000 16aG x0010
+		16r4rgeg x0000 17a20G x0010
+		32g,
 
-		x0010>
-		8c4cc
-		8c4cc
-		8c
+		x0000
+		32c16cc
+		32c17c20c
+		32c
 	`
 })
+
