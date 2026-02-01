@@ -13,7 +13,7 @@ SW : PA7
 #include "depmel/sf.h"
 #include "depmel/sh.h"
 #include "depmel/sw.h"
-#include "depmel/teitiku.h"
+#include "depmel/sakurai.h"
 
 #define MTRKS 4
 #define BTN_DOWN ~VPORTA.IN&(1<<7)
@@ -148,6 +148,11 @@ void main(){
 
 		blink(0b00110011);sleep();play(azamino);
 		blink(0b00110011);sleep();play(holiday);
+		blink(0b00110011);sleep();play(springbox);
+		blink(0b00110011);sleep();play(sennro_no_kanata);
+		blink(0b00110011);sleep();play(mellow_time);
+		blink(0b00110011);sleep();play(cappuccino);
+		blink(0b00110011);sleep();play(ogawa_no_seseragi);
 		/*
 		#if 8<=SIZE
 			blink(0b00110011);sleep();play(famima);
