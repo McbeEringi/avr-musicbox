@@ -134,6 +134,8 @@ void main(){
 
 	while(1){
 		// #if 8<=SIZE
+			blink(0b00110011);sleep();play(kokyo_no_sora);
+			blink(0b00110011);sleep();play(toryanse);
 			blink(0b00110011);sleep();play(famima);
 			blink(0b00110011);sleep();play(kakko);
 			blink(0b00110011);sleep();play(ofuro);
