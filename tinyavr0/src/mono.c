@@ -6,6 +6,8 @@ LED: PA3
 SW : PA7
 */
 
+#ifndef STEREO
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
@@ -16,7 +18,7 @@ SW : PA7
 #include "depmel/sakurai.h"
 
 #define MTRKS 4
-#define BTN_DOWN ~VPORTB.IN&(1<<3)
+#define BTN_DOWN ~VPORTA.IN&(1<<7)
 #define FOR(X) for(uint8_t i=0;i<X;i++)
 void wait(){while(!(TCB0.INTFLAGS&TCB_CAPT_bm));TCB0.INTFLAGS=1;}// TCB0待ち(25us) 1書いて解除
 #ifdef DOORBELL
@@ -30,14 +32,10 @@ const uint16_t n0[]={2446,2309,2179,2057,1942,1833,1730,1633,1541,1455,1373,1296
 	uint8_t BTNSTAT=0;
 #endif
 
-static void sleep(){
-			PORTA.OUTCLR=0b1000000;
-	uint8_t d=VPORTA.DIR;VPORTA.DIR=0b1000000;sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;sleep_cpu();cli();
-			PORTA.OUTSET=0b1000000;
-	wait_btn();VPORTA.DIR=d;}// avr/sleep.hが仕事しないので手動設定
-ISR(PORTB_PORT_vect){PORTB.INTFLAGS=PORT_INT3_bm;}// リセット必須
+static void sleep(){uint8_t d=VPORTA.DIR;VPORTA.DIR=0;sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;sleep_cpu();cli();wait_btn();VPORTA.DIR=d;}// avr/sleep.hが仕事しないので手動設定
+ISR(PORTA_PORT_vect){PORTA.INTFLAGS=PORT_INT7_bm;}// リセット必須
 
-static void blink(uint8_t x){FOR(8){if((x>>i)&1)PORTA.OUTSET=0b10000000;else PORTA.OUTCLR=0b10000000;for(uint16_t j=0;j<2500;j++)wait();}}// 下位bitから読み込み MSBの状態のまま離脱 1/16秒*8
+static void blink(uint8_t x){FOR(8){if((x>>i)&1)PORTA.OUTSET=0b1000;else PORTA.OUTCLR=0b1000;for(uint16_t j=0;j<2500;j++)wait();}}// 下位bitから読み込み MSBの状態のまま離脱 1/16秒*8
 
 static void play(const uint8_t *s){
 	static const uint8_t
@@ -46,8 +44,7 @@ static void play(const uint8_t *s){
 	t[MTRKS<<1]={},_t[MTRKS],// 音価
 	cfg[MTRKS]={},_v[MTRKS],// 設定項目 音量
 	ntrks,// 有効トラック数
-	out,
-	out_;
+	out;
 	uint16_t
 	h=(*s++<<8)|(*s++),// ヘッダ
 	n[MTRKS]={},_n[MTRKS],// 音高
@@ -82,17 +79,11 @@ static void play(const uint8_t *s){
 				if(!_dt)_dt=dt;
 			}
 			out=0;
-			out_=0;
 			FOR(ntrks){// 矩形波合成 1/4
 				if(++_n[i]==n[i])_n[i]=0;
-				if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1))){
-					if(i<(ntrks>>1))out+=_v[i]>>1;
-					else out_+=_v[i]>>1;
-				}
+				if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=_v[i]>>2;
 			}
-			if(ntrks==1)out=out_;
-			TCA0.SINGLE.CMP0BUF=out;
-			TCA0.SINGLE.CMP1BUF=out_;
+			TCA0.SINGLE.CMP2BUF=out;
 			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=384;}// 減衰 9.6ms毎
 			#ifdef DOORBELL
 				if(BTN_DOWN&&!BTNSTAT){BTNSTAT=BTN_DOWN;goto head;}// 再生途中で頭出し
@@ -104,18 +95,17 @@ static void play(const uint8_t *s){
 		}
 		dc:if(!(h&1))break;// ループ
 	}
-	fin:TCA0.SINGLE.CMP0BUF=0;
-	TCA0.SINGLE.CMP1BUF=0;
+	fin:TCA0.SINGLE.CMP2BUF=0;
 	wait_btn();
 	#ifdef DOORBELL
-		if(BTN_DOWN){PORTB.PIN3CTRL^=PORT_INVEN_bm;sleep();PORTB.PIN3CTRL^=PORT_INVEN_bm;}
+		if(BTN_DOWN){PORTA.PIN7CTRL^=PORT_INVEN_bm;sleep();PORTA.PIN7CTRL^=PORT_INVEN_bm;}
 	#endif
 }
 
 void main(){
 	// TCA0 疑似DAC 可能な限り高速な方が良い 20MHz/(8bit=2**8)=78.125kHz
 	TCA0.SINGLE.CTRLA=TCA_SINGLE_ENABLE_bm;// 分周無し TCA有効
-	TCA0.SINGLE.CTRLB=TCA_SINGLE_CMP0EN_bm|TCA_SINGLE_CMP1EN_bm|TCA_SINGLE_WGMODE_SINGLESLOPE_gc;// TCA0 wo0,1有効 単傾斜PWM
+	TCA0.SINGLE.CTRLB=TCA_SINGLE_CMP2EN_bm|TCA_SINGLE_WGMODE_SINGLESLOPE_gc;// TCA0 wo2有効 単傾斜PWM
 	TCA0.SINGLE.PER=0xff;// TOP 8bit
 
 	// TCB0 波形生成 これが解像度 可聴域上端の2倍弱あれば何とかなる 20MHz/500=40kHz
@@ -124,10 +114,16 @@ void main(){
 	TCB0.CCMP=F_CPU/4e4-1;// TOP
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
-		PORTA.DIRSET=0b11001000;// 出力: PA3
-		PORTB.DIRSET=0b11;// 出力: PB2
-	PORTB.PIN3CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない
-			// PORTA.OUTSET=0b1000000;
+	#ifdef USE_PB2
+		PORTA.DIRSET=0b1000;// 出力: PA3
+		PORTB.DIRSET=0b0100;// 出力: PB2
+	#else
+		PORTA.DIRSET=0b1100;// 出力: PA2,3
+	#endif
+	PORTA.PIN7CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;// PA7 プルアップ ピン割り込みはBOTHEDGESかLEVELじゃなきゃ起きない
+	#ifdef DOORBELL
+		PORTA.PIN7CTRL|=PORT_INVEN_bm;// 閉扉==ショート
+	#endif
 
 	while(1){
 		blink(0b00110011);sleep();play(sf_3);
@@ -159,7 +155,8 @@ void main(){
 		blink(0b00110011);sleep();play(mellow_time);
 		blink(0b00110011);sleep();play(cappuccino);
 		blink(0b00110011);sleep();play(ogawa_no_seseragi);
-		// #if 8<=SIZE
+		/*
+		#if 8<=SIZE
 			blink(0b00110011);sleep();play(famima);
 			blink(0b00110011);sleep();play(kakko);
 			blink(0b00110011);sleep();play(ofuro);
@@ -171,13 +168,15 @@ void main(){
 			blink(0b00110011);sleep();play(kewpie);
 			blink(0b00110011);sleep();play(dw3battle);play(dw3level);
 			blink(0b00110011);sleep();play(allback);
-			blink(0b00110011);sleep();play(surfboard);
-		// #elif 4<=SIZE
-		// 	blink(0b00110011);sleep();play(jingle);play(yobikomi);
-		// 	blink(0b00110011);sleep();play(jingle_bell);
-		// 	blink(0b00110011);sleep();play(petrouchka);
-		// #else
-		// 	blink(0b00110011);sleep();play(jingle_bell);
-		// #endif
+		#elif 4<=SIZE
+			blink(0b00110011);sleep();play(jingle);play(yobikomi);
+			blink(0b00110011);sleep();play(jingle_bell);
+			blink(0b00110011);sleep();play(petrouchka);
+		#else
+			blink(0b00110011);sleep();play(jingle_bell);
+		#endif
+		*/
 	}
 }
+
+#endif
