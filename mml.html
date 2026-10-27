@@ -71,7 +71,7 @@ r : 休符 パートを途中で終了する場合はrを最後に付ける
 						osc.setPeriodicWave(pwav[a.cfg>>1&1]),
 						osc.frequency.value=13.75*(2**((n+3)/12+o+(a.cfg>>3&1?1:4))),// A-1
 						g.gain.value=[1,.5][a.cfg>>2&1]*.2,
-						(a.cfg&1)||g.gain.setTargetAtTime(0,t,.2),
+						(a.cfg&1)||g.gain.setTargetAtTime(.01,t,.2),
 						[osc,g,actx.destination].reduce((a,x)=>(a.connect(x),x)),mr&&g.connect(msd),
 						osc.start(t),osc.stop(t+d),
 						a.s.push(_=>osc.stop())

@@ -3,7 +3,7 @@
 	tpm:120*12/2,
 	loop:true,
 	//t_start:48*4+24+48*4+48*2+24+48,
-	wav:'mml_recorded',// enablie this line to automaticly record and download
+	// wav:'mml_recorded',// enablie this line to automaticly record and download
 	notes:`
 		x0010 >>
 		16c<6A2G 16g4fg
