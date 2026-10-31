@@ -1,11 +1,9 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include <stdlib.h>
 
 
 uint8_t onkai=0;
-uint8_t onkai_=0;
 
 const uint8_t sin_table[]={
 	// 64程度のテーブルでは最適化したとしても1/4波形よりも全部展開したほうが小さいし早い
@@ -18,7 +16,7 @@ const uint8_t sin_table[]={
    29,  37,  47,  57,  67,  79,  90, 103, 115
 };
 
-const uint16_t d_theta[]={// C7 ~ B7
+const uint16_t d_theta[]={// C8 ~ B8
 	// [...Array(12)].map((_,i)=>Math.round(65536/(20000/(440*(2**((i-9)/12+4))))))
 	13717, 14532, 15396,
   16312, 17282, 18310,
@@ -31,7 +29,7 @@ uint16_t theta[NUM_POLY]={0};
 
 
 ISR(TCB0_INT_vect){
-	theta[0]+=d_theta[onkai]>>onkai_;
+	theta[0]+=d_theta[onkai%12]>>(7-onkai/12);
 
 	uint8_t out=sin_table[theta[0]>>10];
 	TCA0.SINGLE.CMP0BUF=out;
@@ -66,8 +64,6 @@ void main(){
 	sei();
 	while(1){
 		_delay_ms(50);
-		onkai=rand()&0xf;
-		while(11<onkai)onkai--;
-		onkai_=rand()&3;
+		if(96<++onkai)onkai=0;
 	}
 }
