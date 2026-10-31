@@ -45,11 +45,11 @@ ISR(TCB0_INT_vect){
 		// out+=theta[i]>>15?63:0; // sq wave
 		if(i&1)
 			out+=sin_table[(
-				theta[i]+(sin_table[phi[i]>>10]<<4)
+				theta[i]+(sin_table[phi[i]>>10]*16)
 			)>>10]/8;
 		else
 			out_+=sin_table[(
-				theta[i]+(sin_table[phi[i]>>10]<<4)
+				theta[i]+(sin_table[phi[i]>>10]*16)
 			)>>10]/8;
 	}
 	TCA0.SINGLE.CMP0BUF=out+128;
