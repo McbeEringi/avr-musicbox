@@ -6,9 +6,18 @@
 
 uint8_t onkai=0;
 uint8_t onkai_=0;
-const uint8_t sin_table[]={// [16]
-	// [...Array(16)].map((_,i,{length:l})=>Math.round(Math.sin(i/l*Math.PI*.5)*255))
-	0,25,50,74,98,120,142,162,180,197,212,225,236,244,250,254,255
+
+const uint8_t sin_table[]={
+	// // [...Array(16)].map((_,i,{length:l})=>Math.round(Math.sin(i/l*Math.PI*.5)*255))
+	// 0,25,50,74,98,120,142,162,180,197,212,225,236,244,250,254,255
+	// 64程度のテーブルでは最適化したとしても全部展開したほうが早い
+	// [...Array(64)].map((_,i,{length:l})=>Math.round((Math.sin(i/l*Math.PI*2)*.5+.5)*255))
+	128, 140, 152, 165, 176, 188, 198, 208, 218, 226, 234,
+  240, 245, 250, 253, 254, 255, 254, 253, 250, 245, 240,
+  234, 226, 218, 208, 198, 188, 176, 165, 152, 140, 128,
+  115, 103,  90,  79,  67,  57,  47,  37,  29,  21,  15,
+   10,   5,   2,   1,   0,   1,   2,   5,  10,  15,  21,
+   29,  37,  47,  57,  67,  79,  90, 103, 115
 };
 
 const uint16_t d_theta[]={// C7 ~ B7
@@ -25,13 +34,24 @@ uint16_t theta[NUM_POLY]={0};
 
 ISR(TCB0_INT_vect){
 	theta[0]+=d_theta[onkai]>>onkai_;
-	uint8_t out;
-	switch(theta[0]>>14){
-		case 0b00:{out=0x80+(sin_table[((theta[0]>>10)&0xf)]>>1);break;}
-		case 0b01:{out=0x80+(sin_table[0x10-((theta[0]>>10)&0xf)]>>1);break;}
-		case 0b10:{out=0x80-(sin_table[((theta[0]>>10)&0xf)]>>1);break;}
-		case 0b11:{out=0x80-(sin_table[0x10-((theta[0]>>10)&0xf)]>>1);break;}
-	}
+
+// #if OPTIMIZE==0
+// 	uint8_t out;
+// 	switch(theta[0]>>14){
+// 		case 0b00:{out=0x80+(sin_table[((theta[0]>>10)&0xf)]>>1);break;}
+// 		case 0b01:{out=0x80+(sin_table[0x10-((theta[0]>>10)&0xf)]>>1);break;}
+// 		case 0b10:{out=0x80-(sin_table[((theta[0]>>10)&0xf)]>>1);break;}
+// 		case 0b11:{out=0x80-(sin_table[0x10-((theta[0]>>10)&0xf)]>>1);break;}
+// 	}
+// #elif OPTIMIZE==1
+// 	uint8_t out=(theta[0]>>10)&0xf;
+// 	out=sin_table[(theta[0]>>14)&1?0x10-out:out]>>1;
+// 	out=0x80+(theta[0]>>15?-out:out);
+// #elif OPTIMIZE==2
+	uint8_t out=sin_table[theta[0]>>10];
+// #endif
+
+	
 	TCA0.SINGLE.CMP0BUF=out;
 	TCA0.SINGLE.CMP1BUF=out;
 
