@@ -8,9 +8,7 @@ uint8_t onkai=0;
 uint8_t onkai_=0;
 
 const uint8_t sin_table[]={
-	// // [...Array(16)].map((_,i,{length:l})=>Math.round(Math.sin(i/l*Math.PI*.5)*255))
-	// 0,25,50,74,98,120,142,162,180,197,212,225,236,244,250,254,255
-	// 64程度のテーブルでは最適化したとしても全部展開したほうが早い
+	// 64程度のテーブルでは最適化したとしても1/4波形よりも全部展開したほうが小さいし早い
 	// [...Array(64)].map((_,i,{length:l})=>Math.round((Math.sin(i/l*Math.PI*2)*.5+.5)*255))
 	128, 140, 152, 165, 176, 188, 198, 208, 218, 226, 234,
   240, 245, 250, 253, 254, 255, 254, 253, 250, 245, 240,
@@ -35,23 +33,7 @@ uint16_t theta[NUM_POLY]={0};
 ISR(TCB0_INT_vect){
 	theta[0]+=d_theta[onkai]>>onkai_;
 
-// #if OPTIMIZE==0
-// 	uint8_t out;
-// 	switch(theta[0]>>14){
-// 		case 0b00:{out=0x80+(sin_table[((theta[0]>>10)&0xf)]>>1);break;}
-// 		case 0b01:{out=0x80+(sin_table[0x10-((theta[0]>>10)&0xf)]>>1);break;}
-// 		case 0b10:{out=0x80-(sin_table[((theta[0]>>10)&0xf)]>>1);break;}
-// 		case 0b11:{out=0x80-(sin_table[0x10-((theta[0]>>10)&0xf)]>>1);break;}
-// 	}
-// #elif OPTIMIZE==1
-// 	uint8_t out=(theta[0]>>10)&0xf;
-// 	out=sin_table[(theta[0]>>14)&1?0x10-out:out]>>1;
-// 	out=0x80+(theta[0]>>15?-out:out);
-// #elif OPTIMIZE==2
 	uint8_t out=sin_table[theta[0]>>10];
-// #endif
-
-	
 	TCA0.SINGLE.CMP0BUF=out;
 	TCA0.SINGLE.CMP1BUF=out;
 
