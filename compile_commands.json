@@ -1,0 +1,8 @@
+[
+    {
+        "command": "/home/mcbeeringi/.platformio/packages/toolchain-atmelavr@1.70300.191015/bin/avr-gcc -o .pio/build/t1604/src/main.o -c -std=gnu11 -fno-fat-lto-objects -mmcu=attiny1604 -Os -w -ffunction-sections -fdata-sections -flto -DF_CPU=20000000L -DPLATFORMIO=60200 -DARDUINO_attinyxy4 -DMILLIS_USE_TIMERA0 -DUARTBAUD5V -Isrc src/main.c",
+        "directory": "/home/mcbeeringi/Documents/git/avr-musicbox",
+        "file": "src/main.c",
+        "output": ".pio/build/t1604/src/main.o"
+    }
+]
