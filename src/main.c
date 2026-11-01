@@ -29,6 +29,7 @@ const uint16_t d_theta[]={// C7 ~ B7
 uint8_t poly=1,mn=0;
 uint16_t theta[NUM_POLY]={0};
 uint16_t phi[NUM_POLY]={0};
+int8_t fb[NUM_POLY]={0};
 
 uint8_t test[]={0,4,7,11};
 
@@ -44,11 +45,17 @@ ISR(TCB0_INT_vect){
 		phi[i]+=(d_theta[note]>>oct)*mn;
 		if(i&1)
 			out_l+=sin_table[(
-				theta[i]+(sin_table[phi[i]>>10]*16)
+				theta[i]+
+				sin_table[(
+					phi[i]
+				)>>10]*16
 			)>>10]/8;
 		else
 			out_r+=sin_table[(
-				theta[i]+(sin_table[phi[i]>>10]*16)
+				theta[i]+
+				sin_table[(
+					phi[i]
+				)>>10]*16
 			)>>10]/8;
 	}
 	TCA0.SINGLE.CMP0BUF=out_r+128;
@@ -84,7 +91,7 @@ void main(){
 	sei();
 	while(1){
 		++poly;
-		_delay_ms(50);
+		_delay_ms(100);
 		if(NUM_POLY-1<poly){
 			PORTA.OUTTGL=0x80;
 			poly=1;
