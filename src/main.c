@@ -40,22 +40,15 @@ ISR(TCB0_INT_vect){
 		uint8_t
 			note=test[i%4],
 			oct=3-i/4;
+		int8_t out;
 		theta[i]+=d_theta[note]>>oct;
 		phi[i]+=(d_theta[note]>>oct)*mn;
-		if(i&1)
-			out_l+=sin_table[(
-				theta[i]+
-				sin_table[(
-					phi[i]
-				)>>10]*16
-			)>>10]/8;
-		else
-			out_r+=sin_table[(
-				theta[i]+
-				sin_table[(
-					phi[i]
-				)>>10]*16
-			)>>10]/8;
+		out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
+
+		// if(i&1)
+			out_l+=out;
+		// else
+			out_r+=out;
 	}
 	TCA0.SINGLE.CMP0BUF=out_r+128;
 	TCA0.SINGLE.CMP1BUF=out_l+128;
