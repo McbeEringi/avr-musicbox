@@ -29,7 +29,6 @@ const uint16_t d_theta[]={// C7 ~ B7
 uint8_t poly=1,mn=0;
 uint16_t theta[NUM_POLY]={0};
 uint16_t phi[NUM_POLY]={0};
-int8_t fb[NUM_POLY]={0};
 
 uint8_t test[]={0,4,7,11};
 
