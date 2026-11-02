@@ -13,4 +13,5 @@
 	- mod index 0(sin)~7
 - pulse
 	- 1/2 1/4 1/8
+- saw
 - xor noise

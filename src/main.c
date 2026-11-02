@@ -25,7 +25,7 @@ const uint16_t d_theta[]={// C9 ~ B9
   46137, 48881, 51787
 };
 
-#define NUM_POLY 6
+#define NUM_POLY 7
 uint8_t poly=1,mn=0;
 uint16_t theta[NUM_POLY]={0};
 uint16_t phi[NUM_POLY]={0};
@@ -41,7 +41,7 @@ ISR(TCB0_INT_vect){
 	int8_t out;
 
 	FOR(poly){
-		if(i==0){// noise
+		if(0){// noise
 			uint8_t
 				note=test[(mn+poly)%4],
 				oct=7-(mn+poly)/4;
@@ -57,11 +57,13 @@ ISR(TCB0_INT_vect){
 				oct=5-i/4;
 			theta[i]+=d_theta[note]>>oct;
 			phi[i]+=(d_theta[note]>>oct)*mn;
-			if(0<i&&i<4)
-			out=(theta[i]>>13)<(8>>i)?8:-8;
-			else
-			out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
-			// out=0;
+			// if(0<i&&i<4)
+			// 	out=(theta[i]>>13)<(8>>i)?8:-8;
+			// else if(i==4)
+			// 	out=(theta[i]>>11)-16;
+			// else
+				out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
+				// out=0;
 		}
 
 		// if(i&1)
@@ -102,7 +104,7 @@ void main(){
 	sei();
 	while(1){
 		++poly;
-		_delay_ms(150);
+		_delay_ms(50);
 		if(NUM_POLY-1<poly){
 			PORTA.OUTTGL=0x80;
 			poly=1;
