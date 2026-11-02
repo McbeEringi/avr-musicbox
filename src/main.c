@@ -17,33 +17,52 @@ const int8_t sin_table[]={
    -12
 };
 
-const uint16_t d_theta[]={// C7 ~ B7
-	// [...Array(12)].map((_,i)=>Math.round(65536/(20000/(440*(2**((i-9)/12+4))))))
-   6858,  7266,  7698,
-   8156,  8641,  9155,
-   9699, 10276, 10887,
-  11534, 12220, 12947
+const uint16_t d_theta[]={// C9 ~ B9
+	// [...Array(12)].map((_,i)=>Math.round(65536/(20000/(440*(2**((i-9)/12+5))))))
+  27433, 29065, 30793,
+  32624, 34564, 36619,
+  38797, 41104, 43548,
+  46137, 48881, 51787
 };
 
-#define NUM_POLY 7
+#define NUM_POLY 6
 uint8_t poly=1,mn=0;
 uint16_t theta[NUM_POLY]={0};
 uint16_t phi[NUM_POLY]={0};
 
 uint8_t test[]={0,4,7,11};
 
+uint16_t lfsr=0xace1;
+void lfsr_step(){lfsr=(lfsr>>1)|(((lfsr>>0)^(lfsr>>2)^(lfsr>>3)^(lfsr>>5))<<15);}
+
 
 ISR(TCB0_INT_vect){
 	int8_t out_l=0,out_r=0;
+	int8_t out;
 
 	FOR(poly){
-		uint8_t
-			note=test[i%4],
-			oct=3-i/4;
-		int8_t out;
-		theta[i]+=d_theta[note]>>oct;
-		phi[i]+=(d_theta[note]>>oct)*mn;
-		out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
+		if(i==0){// noise
+			uint8_t
+				note=test[(mn+poly)%4],
+				oct=7-(mn+poly)/4;
+			uint16_t prev=theta[i];
+			theta[i]+=d_theta[note]>>oct;
+			if(theta[i]<prev)
+				lfsr_step();
+			out=lfsr&0x8000?16:-16;
+		}
+		else{
+			uint8_t
+				note=test[i%4],
+				oct=5-i/4;
+			theta[i]+=d_theta[note]>>oct;
+			phi[i]+=(d_theta[note]>>oct)*mn;
+			if(0<i&&i<4)
+			out=(theta[i]>>13)<(8>>i)?8:-8;
+			else
+			out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
+			// out=0;
+		}
 
 		// if(i&1)
 			out_l+=out;
@@ -83,7 +102,7 @@ void main(){
 	sei();
 	while(1){
 		++poly;
-		_delay_ms(100);
+		_delay_ms(150);
 		if(NUM_POLY-1<poly){
 			PORTA.OUTTGL=0x80;
 			poly=1;
