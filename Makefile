@@ -12,6 +12,6 @@ main.elf:
 main.S:
 	${CC} -S ${CFLAGS} -o main.S
 clean:
-	rm main.elf
+	- rm main.elf main.S
 compiledb:
 	@ echo -e "[{\n\t\"directory\":\"$(dir $(abspath $(lastword $(MAKEFILE_LIST))))\",\n\t\"command\":\"${CC} ${CFLAGS}\",\n\t\"file\":\"${FILE}\"\n}]">compile_commands.json
