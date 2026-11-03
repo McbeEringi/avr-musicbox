@@ -1,5 +1,20 @@
 # avr-musicbox
 
+
+## seq format
+```txt
+header cmd cmd...
+```
+
+### header
+```c
+struct Header{
+	uint8_t ntrks;
+	uint16_t[ntrks] offset;
+}
+```
+
+### cmd
 ```txt
 NNNNOOLL: play
 	NNNN: note number 0~11
