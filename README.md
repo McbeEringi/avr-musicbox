@@ -1,4 +1,22 @@
 # avr-musicbox
+A simple yet powerful musicbox built on tinyAVR0
+
+## Build and flash
+
+Requires serialupdi to flash
+
+### PlatformIO
+```sh
+pio run
+```
+
+### Makefile (Linux only?)
+Install following and add to `PATH`
+```
+avr-gcc avr-libc avrdude
+```
+
+then, run `make`
 
 
 ## seq format
