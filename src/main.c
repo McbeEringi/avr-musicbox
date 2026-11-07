@@ -1,6 +1,12 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
+#include <avr/sleep.h>
+#include "seq.h"
+#include "depmel/sf.h"
+#include "depmel/sh.h"
+#include "depmel/sw.h"
+#include "depmel/sakurai.h"
+
 
 #define FOR(X) for(uint8_t i=0;i<X;i++)
 
@@ -25,7 +31,8 @@ const uint16_t d_theta[]={// C9 ~ B9
   46137, 48881, 51787
 };
 
-#define NUM_POLY 7
+
+#define NUM_POLY 4
 volatile uint8_t poly=1,mn=0;
 uint16_t theta[NUM_POLY]={0};
 uint16_t phi[NUM_POLY]={0};
@@ -35,69 +42,90 @@ uint8_t test[]={0,4,7,11};
 uint16_t lfsr=0xace1;
 void lfsr_step(){lfsr=(lfsr>>1)|(((lfsr>>0)^(lfsr>>2)^(lfsr>>3)^(lfsr>>5))<<15);}
 
+#define BTN_DOWN ~VPORTB.IN&(1<<3)
 void wait(){
 	while(!(TCB0.INTFLAGS&TCB_CAPT_bm))
 		;
 	TCB0.INTFLAGS=1;
 }
+void wait_btn(){while(BTN_DOWN)FOR(255)wait();}// 0.025*255=6.375ms
+
+static void sleep(){
+			PORTA.OUTCLR=0b1000000;
+	uint8_t d=VPORTA.DIR;VPORTA.DIR=0b1000000;sei();SLPCTRL.CTRLA=SLPCTRL_SMODE_PDOWN_gc|SLPCTRL_SEN_bm;sleep_cpu();cli();
+			PORTA.OUTSET=0b1000000;
+	wait_btn();VPORTA.DIR=d;}// avr/sleep.hが仕事しないので手動設定
+ISR(PORTB_PORT_vect){PORTB.INTFLAGS=PORT_INT3_bm;}// リセット必須
+
+static void blink(uint8_t x){FOR(8){if((x>>i)&1)PORTA.OUTSET=0b10000000;else PORTA.OUTCLR=0b10000000;for(uint16_t j=0;j<1250;j++)wait();}}
 
 
-void play(){
-	int8_t out_l,out_r;
+#define MTRKS NUM_POLY
+
+void play(const uint8_t *s){
+	static const uint8_t
+	*p[MTRKS],*_p[MTRKS];// チャネルポインタ ループ用に二重保存
+	static uint8_t
+	t[MTRKS<<1]={},_t[MTRKS],// 音価
+	cfg[MTRKS]={},_v[MTRKS],// 設定項目 音量
+	ntrks;// 有効トラック数
 	int8_t out;
-	uint16_t n=0;
-	wait();
+	uint16_t
+	h=(*s++<<8)|(*s++),// ヘッダ
+	n[MTRKS]={},theta[MTRKS],phi[MTRKS],// 音高
+	env,// 減衰カウンタ
+	dt=12e5/(h>>5),_dt;// 最小音価 20000*60/TPM
+
+	ntrks=0;
+	while(ntrks<MTRKS){if(*s++==0){if(*s==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
+
+
 	while(1){
-		out_l=0;out_r=0;
-		FOR(poly){
-			if(0){// noise
-				uint8_t
-					note=test[(mn+poly)%4],
-					oct=7-(mn+poly)/4;
+		_dt=ntrks;env=1;FOR(ntrks){_p[i]=p[i];_t[i]=0;}// 初期化
+		while(1){
+			if(--_dt<ntrks){
+				if(*_p[_dt]&&!_t[_dt]--){
+					while(!(*_p[_dt]&0x80)){
+						if(*_p[_dt]>>6==1)t[(_dt<<1)|((*_p[_dt]>>5)&1)]=*_p[_dt]&0x1f;// 音価メモリ変更
+						else if(*_p[_dt]>>5==1)cfg[_dt]=*_p[_dt]&0x1f;// 設定項目変更
+						else if(*_p[_dt]==1)goto dc;// 終了フラグ
+						_p[_dt]++;
+					}
+					_t[_dt]=t[(_dt<<1)|((*_p[_dt]>>6)&1)];// 音価1bit(5bit)
+					// n[_dt]=(*_p[_dt]&0xf)>11?0:n0[*_p[_dt]&0xf]>>(((*_p[_dt]>>4)&3)+((cfg[_dt]>>3)&1?1:4));// オクターブ2+1bit 音高4bit
+					n[_dt]=(*_p[_dt]&0xf)>11?0:d_theta[*_p[_dt]&0xf]>>(((cfg[_dt]>>3)&1?8:5)-((*_p[_dt]>>4)&3));
+					theta[_dt]=0;// 波形カウンタリセット
+					phi[_dt]=0;// 波形カウンタリセット
+					_v[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
+					_p[_dt]++;
+				}
+				if(!_dt)_dt=dt;
+			}
+			out=0;
+			FOR(ntrks){// 矩形波合成 1/4
 				uint16_t prev=theta[i];
-				theta[i]+=d_theta[note]>>oct;
-				if(theta[i]<prev)
-					lfsr_step();
-				out=lfsr&0x8000?16:-16;
-			}
-			else{
-				uint8_t
-					note=test[i%4],
-					oct=5-i/4;
-				theta[i]+=d_theta[note]>>oct;
-				phi[i]+=(d_theta[note]>>oct)*mn;
-				// if(0<i&&i<4)
-				// 	out=(theta[i]>>13)<(8>>i)?8:-8;
-				// else if(i==4)
-				// 	out=(theta[i]>>11)-16;
-				// else
-					out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
-					// out=0;
-			}
+				theta[i]+=n[i];
+				phi[i]+=n[i]*(((cfg[i]>>1)&1)?4:2);
 
-			// if(i&1)
-				out_l+=out;
-			// else
-				out_r+=out;
-		}
-		TCA0.SINGLE.CMP0BUF=out_r+128;
-		TCA0.SINGLE.CMP1BUF=out_l+128;
-		if(2000<++n){
-			n=0;
-			if(NUM_POLY<++poly){
-				PORTA.OUTTGL=0x80;
-				poly=1;
-				mn++;
+
+	      // if(theta[i]<prev)lfsr_step();
+	      // out+=lfsr&0x8000?32:-32;
+				out+=(sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]*_v[i]/256)/4;
+
+				// if(++_n[i]==n[i])_n[i]=0;
+				// if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=_v[i]>>2;
 			}
+			// TCA0.SINGLE.CMP2BUF=out;
+			TCA0.SINGLE.CMP0BUF=out+128;
+			TCA0.SINGLE.CMP1BUF=out+128;
+			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=384;}// 減衰 9.6ms毎
+			if(BTN_DOWN)goto fin;// ボタン離脱
+			wait();
 		}
-		wait();
+		dc:if(!(h&1))break;// ループ
 	}
-
-}
-ISR(PORTB_PORT_vect){
-	mn=0;
-	PORTA.OUTCLR=0x80;
-	PORTB.INTFLAGS=PORT_INT3_bm;
+	fin:TCA0.SINGLE.CMP2BUF=0;
+	wait_btn();
 }
 
 
@@ -113,11 +141,66 @@ int main(){
 	// TCB0.CTRLB=TCB_CNTMODE_INT_gc;
 
 	PORTA.DIRSET=0b11000000;
-	PORTA.OUTSET=0b11000000;
+	PORTA.OUTSET=0b01000000;
 	PORTB.DIRSET=0b11;
 	PORTB.PIN3CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);
-	sei();
-	play();
+	// sei();
+	// play(yobikomi);
+		while(1){
+		// #if 8<=SIZE
+			blink(0b00110011);sleep();play(kokyo_no_sora);
+			blink(0b00110011);sleep();play(toryanse);
+			blink(0b00110011);sleep();play(famima);
+			blink(0b00110011);sleep();play(kakko);
+			blink(0b00110011);sleep();play(ofuro);
+			blink(0b00110011);sleep();play(jingle);play(yobikomi);
+			blink(0b00110011);sleep();play(jingle_bell);
+			blink(0b00110011);sleep();play(petrouchka);
+			blink(0b00110011);sleep();play(nyan);
+			blink(0b00110011);sleep();play(small_world);
+			blink(0b00110011);sleep();play(kewpie);
+			blink(0b00110011);sleep();play(dw3battle);play(dw3level);
+			blink(0b00110011);sleep();play(allback);
+			blink(0b00110011);sleep();play(waltzing_in_the_rain);
+			blink(0b00110011);sleep();play(surfboard);
+		// #elif 4<=SIZE
+		// 	blink(0b00110011);sleep();play(jingle);play(yobikomi);
+		// 	blink(0b00110011);sleep();play(jingle_bell);
+		// 	blink(0b00110011);sleep();play(petrouchka);
+		// #else
+		// 	blink(0b00110011);sleep();play(jingle_bell);
+		// #endif
+		blink(0b00110011);sleep();play(sf_3);
+		blink(0b00110011);sleep();play(haru_new);
+
+		blink(0b00110011);sleep();play(sh1);
+		blink(0b00110011);sleep();play(sh2);
+		blink(0b00110011);sleep();play(sh3);
+		blink(0b00110011);sleep();play(sh4);
+		blink(0b00110011);sleep();play(sh5);
+		blink(0b00110011);sleep();play(sh6);
+		blink(0b00110011);sleep();play(sh7);
+		blink(0b00110011);sleep();play(sh8);
+		blink(0b00110011);sleep();play(sh9);
+
+		blink(0b00110011);sleep();play(gota_del_vient);
+		blink(0b00110011);sleep();play(verde_rayo);
+		blink(0b00110011);sleep();play(water_crown);
+		blink(0b00110011);sleep();play(ciello_estrellado);
+		blink(0b00110011);sleep();play(moon_stone);
+		blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
+		blink(0b00110011);sleep();play(mori_no_yousei);
+		blink(0b00110011);sleep();play(asatuyu);
+
+		blink(0b00110011);sleep();play(azamino);
+		blink(0b00110011);sleep();play(holiday);
+		blink(0b00110011);sleep();play(springbox);
+		blink(0b00110011);sleep();play(sennro_no_kanata);
+		blink(0b00110011);sleep();play(mellow_time);
+		blink(0b00110011);sleep();play(cappuccino);
+		blink(0b00110011);sleep();play(ogawa_no_seseragi);
+	}
+
 }
