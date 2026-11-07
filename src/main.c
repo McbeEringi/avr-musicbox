@@ -119,6 +119,7 @@ void play(const uint8_t *s){
 				// if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=_v[i]>>2;
 			}
 			// TCA0.SINGLE.CMP2BUF=out;
+			if(ntrks==1)out_r=out_l;
 			TCA0.SINGLE.CMP0BUF=out_r+128;
 			TCA0.SINGLE.CMP1BUF=out_l+128;
 			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=192;}// 減衰 9.6ms毎
@@ -153,51 +154,51 @@ int main(){
 	// sei();
 	// play(yobikomi);
 		while(1){
-		// blink(0b00110011);sleep();play(kokyo_no_sora);
-		// blink(0b00110011);sleep();play(toryanse);
-		// blink(0b00110011);sleep();play(famima);
-		// blink(0b00110011);sleep();play(kakko);
-		// blink(0b00110011);sleep();play(ofuro);
+		blink(0b00110011);sleep();play(kokyo_no_sora);
+		blink(0b00110011);sleep();play(toryanse);
+		blink(0b00110011);sleep();play(famima);
+		blink(0b00110011);sleep();play(kakko);
+		blink(0b00110011);sleep();play(ofuro);
 		blink(0b00110011);sleep();play(jingle);play(yobikomi);
-		// blink(0b00110011);sleep();play(jingle_bell);
+		blink(0b00110011);sleep();play(jingle_bell);
 		blink(0b00110011);sleep();play(petrouchka);
-		// blink(0b00110011);sleep();play(nyan);
-		// blink(0b00110011);sleep();play(small_world);
-		// blink(0b00110011);sleep();play(kewpie);
+		blink(0b00110011);sleep();play(nyan);
+		blink(0b00110011);sleep();play(small_world);
+		blink(0b00110011);sleep();play(kewpie);
 		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
-		// blink(0b00110011);sleep();play(allback);
+		blink(0b00110011);sleep();play(allback);
 		blink(0b00110011);sleep();play(waltzing_in_the_rain);
-		// blink(0b00110011);sleep();play(surfboard);
+		blink(0b00110011);sleep();play(surfboard);
 
-		// blink(0b00110011);sleep();play(sf_3);
-		// blink(0b00110011);sleep();play(haru_new);
+		blink(0b00110011);sleep();play(sf_3);
+		blink(0b00110011);sleep();play(haru_new);
 
-		// blink(0b00110011);sleep();play(sh1);
-		// blink(0b00110011);sleep();play(sh2);
-		// blink(0b00110011);sleep();play(sh3);
-		// blink(0b00110011);sleep();play(sh4);
-		// blink(0b00110011);sleep();play(sh5);
-		// blink(0b00110011);sleep();play(sh6);
-		// blink(0b00110011);sleep();play(sh7);
-		// blink(0b00110011);sleep();play(sh8);
-		// blink(0b00110011);sleep();play(sh9);
+		blink(0b00110011);sleep();play(sh1);
+		blink(0b00110011);sleep();play(sh2);
+		blink(0b00110011);sleep();play(sh3);
+		blink(0b00110011);sleep();play(sh4);
+		blink(0b00110011);sleep();play(sh5);
+		blink(0b00110011);sleep();play(sh6);
+		blink(0b00110011);sleep();play(sh7);
+		blink(0b00110011);sleep();play(sh8);
+		blink(0b00110011);sleep();play(sh9);
 
-		// blink(0b00110011);sleep();play(gota_del_vient);
-		// blink(0b00110011);sleep();play(verde_rayo);
-		// blink(0b00110011);sleep();play(water_crown);
-		// blink(0b00110011);sleep();play(ciello_estrellado);
-		// blink(0b00110011);sleep();play(moon_stone);
-		// blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
-		// blink(0b00110011);sleep();play(mori_no_yousei);
-		// blink(0b00110011);sleep();play(asatuyu);
+		blink(0b00110011);sleep();play(gota_del_vient);
+		blink(0b00110011);sleep();play(verde_rayo);
+		blink(0b00110011);sleep();play(water_crown);
+		blink(0b00110011);sleep();play(ciello_estrellado);
+		blink(0b00110011);sleep();play(moon_stone);
+		blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
+		blink(0b00110011);sleep();play(mori_no_yousei);
+		blink(0b00110011);sleep();play(asatuyu);
 
-		// blink(0b00110011);sleep();play(azamino);
-		// blink(0b00110011);sleep();play(holiday);
-		// blink(0b00110011);sleep();play(springbox);
-		// blink(0b00110011);sleep();play(sennro_no_kanata);
-		// blink(0b00110011);sleep();play(mellow_time);
-		// blink(0b00110011);sleep();play(cappuccino);
-		// blink(0b00110011);sleep();play(ogawa_no_seseragi);
+		blink(0b00110011);sleep();play(azamino);
+		blink(0b00110011);sleep();play(holiday);
+		blink(0b00110011);sleep();play(springbox);
+		blink(0b00110011);sleep();play(sennro_no_kanata);
+		blink(0b00110011);sleep();play(mellow_time);
+		blink(0b00110011);sleep();play(cappuccino);
+		blink(0b00110011);sleep();play(ogawa_no_seseragi);
 	}
 
 }
