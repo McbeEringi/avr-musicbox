@@ -26,7 +26,7 @@ const uint16_t d_theta[]={// C9 ~ B9
 };
 
 #define NUM_POLY 7
-uint8_t poly=1,mn=0;
+volatile uint8_t poly=1,mn=0;
 uint16_t theta[NUM_POLY]={0};
 uint16_t phi[NUM_POLY]={0};
 
@@ -35,46 +35,64 @@ uint8_t test[]={0,4,7,11};
 uint16_t lfsr=0xace1;
 void lfsr_step(){lfsr=(lfsr>>1)|(((lfsr>>0)^(lfsr>>2)^(lfsr>>3)^(lfsr>>5))<<15);}
 
+void wait(){
+	while(!(TCB0.INTFLAGS&TCB_CAPT_bm))
+		;
+	TCB0.INTFLAGS=1;
+}
 
-ISR(TCB0_INT_vect){
-	int8_t out_l=0,out_r=0;
+
+void play(){
+	int8_t out_l,out_r;
 	int8_t out;
+	uint16_t n=0;
+	wait();
+	while(1){
+		out_l=0;out_r=0;
+		FOR(poly){
+			if(0){// noise
+				uint8_t
+					note=test[(mn+poly)%4],
+					oct=7-(mn+poly)/4;
+				uint16_t prev=theta[i];
+				theta[i]+=d_theta[note]>>oct;
+				if(theta[i]<prev)
+					lfsr_step();
+				out=lfsr&0x8000?16:-16;
+			}
+			else{
+				uint8_t
+					note=test[i%4],
+					oct=5-i/4;
+				theta[i]+=d_theta[note]>>oct;
+				phi[i]+=(d_theta[note]>>oct)*mn;
+				// if(0<i&&i<4)
+				// 	out=(theta[i]>>13)<(8>>i)?8:-8;
+				// else if(i==4)
+				// 	out=(theta[i]>>11)-16;
+				// else
+					out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
+					// out=0;
+			}
 
-	FOR(poly){
-		if(0){// noise
-			uint8_t
-				note=test[(mn+poly)%4],
-				oct=7-(mn+poly)/4;
-			uint16_t prev=theta[i];
-			theta[i]+=d_theta[note]>>oct;
-			if(theta[i]<prev)
-				lfsr_step();
-			out=lfsr&0x8000?16:-16;
-		}
-		else{
-			uint8_t
-				note=test[i%4],
-				oct=5-i/4;
-			theta[i]+=d_theta[note]>>oct;
-			phi[i]+=(d_theta[note]>>oct)*mn;
-			// if(0<i&&i<4)
-			// 	out=(theta[i]>>13)<(8>>i)?8:-8;
-			// else if(i==4)
-			// 	out=(theta[i]>>11)-16;
+			// if(i&1)
+				out_l+=out;
 			// else
-				out=sin_table[(theta[i]+sin_table[phi[i]>>10]*41)>>10]/8;
-				// out=0;
+				out_r+=out;
 		}
-
-		// if(i&1)
-			out_l+=out;
-		// else
-			out_r+=out;
+		TCA0.SINGLE.CMP0BUF=out_r+128;
+		TCA0.SINGLE.CMP1BUF=out_l+128;
+		if(2000<++n){
+			n=0;
+			if(NUM_POLY<++poly){
+				PORTA.OUTTGL=0x80;
+				poly=1;
+				mn++;
+			}
+		}
+		wait();
 	}
-	TCA0.SINGLE.CMP0BUF=out_r+128;
-	TCA0.SINGLE.CMP1BUF=out_l+128;
 
-	TCB0.INTFLAGS=TCB_CAPT_bm;
 }
 ISR(PORTB_PORT_vect){
 	mn=0;
@@ -83,7 +101,7 @@ ISR(PORTB_PORT_vect){
 }
 
 
-void main(){
+int main(){
 	// TCA0 as Pseudo DAC 20MHz/(8bit=2**8)=78.125kHz
 	TCA0.SINGLE.PER=0xff;
 	TCA0.SINGLE.CTRLA=TCA_SINGLE_CLKSEL_DIV1_gc|TCA_SINGLE_ENABLE_bm;
@@ -93,7 +111,6 @@ void main(){
 	TCB0.CCMP=F_CPU/20e3-1;
 	TCB0.CTRLA=TCB_CLKSEL_CLKDIV1_gc|TCB_ENABLE_bm;
 	// TCB0.CTRLB=TCB_CNTMODE_INT_gc;
-	TCB0.INTCTRL=TCB_CAPT_bm;
 
 	PORTA.DIRSET=0b11000000;
 	PORTA.OUTSET=0b11000000;
@@ -102,13 +119,5 @@ void main(){
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);
 	sei();
-	while(1){
-		++poly;
-		_delay_ms(50);
-		if(NUM_POLY-1<poly){
-			PORTA.OUTTGL=0x80;
-			poly=1;
-			mn++;
-		}
-	}
+	play();
 }

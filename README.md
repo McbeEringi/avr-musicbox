@@ -61,4 +61,5 @@ NNNNOOLL: play
 		- 1/2 1/4 1/8
 	- saw
 	- xor noise
-
+- push 4bit~
+- if goto pop 8bit
