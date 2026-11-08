@@ -33,9 +33,6 @@ const uint16_t d_theta[]={// C9 ~ B9
 
 
 #define NUM_POLY 4
-volatile uint8_t poly=1,mn=0;
-uint16_t theta[NUM_POLY]={0};
-uint16_t phi[NUM_POLY]={0};
 
 uint8_t test[]={0,4,7,11};
 
@@ -111,7 +108,12 @@ void play(const uint8_t *s){
 
 	      // if(theta[i]<prev)lfsr_step();
 	      // out+=lfsr&0x8000?32:-32;
-				int8_t out=(sin_table[(theta[i]+sin_table[phi[i]>>10]*(_v[i]>>1))>>10]*_v[i]/256)/2;
+				int8_t out=
+					((
+						(cfg[i]>>3)&1?
+						(int16_t)(theta[i]>>8)-128:
+						sin_table[(theta[i]+sin_table[phi[i]>>10]*((_v[i]>>1)+41))>>10]
+					)*_v[i]/256)/2;
 				if(i<(ntrks>>1))out_r+=out;
 				else out_l+=out;
 
@@ -167,6 +169,7 @@ int main(){
 		blink(0b00110011);sleep();play(kewpie);
 		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
 		blink(0b00110011);sleep();play(allback);
+		blink(0b00110011);sleep();play(gakuseigai_no_kissatenn);
 		blink(0b00110011);sleep();play(waltzing_in_the_rain);
 		blink(0b00110011);sleep();play(surfboard);
 
