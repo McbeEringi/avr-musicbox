@@ -98,7 +98,7 @@ void play(const uint8_t *s){
 
 				int8_t out;
 				// if(i==3){
-				// 	if(theta[i]!=prev)
+				// 	if(theta[i]<prev)
 				// 		lfsr[i]=(lfsr[i]>>1)|(((lfsr[i]>>0)^(lfsr[i]>>2)^(lfsr[i]>>3)^(lfsr[i]>>5))<<15);
 				// 	out=(lfsr[i]&0x8000?127:-127)*vol[i]/256/2;
 				// }

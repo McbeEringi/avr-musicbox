@@ -1,6 +1,14 @@
 # avr-musicbox
 A simple yet powerful musicbox built on tinyAVR0
 
+WIP
+
+## Features
+- 4-voice polyphony
+- stereo output
+- 2op FM Synthesis
+	- and PSGs (square, saw, lfsr noise)
+
 ## Build and flash
 
 Requires serialupdi to flash
