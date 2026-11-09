@@ -96,15 +96,21 @@ void play(const uint8_t *s){
 				theta[i]+=dds_step[i];
 				phi[i]+=dds_step[i]*(((cfg[i]>>1)&1)?3:1);
 
-
-	      // if(theta[i]<prev)lfsr[i]=(lfsr[i]>>1)|(((lfsr[i]>>0)^(lfsr[i]>>2)^(lfsr[i]>>3)^(lfsr[i]>>5))<<15);
-	      // int8_t out=(lfsr[i]&0x8000?127:-127)*vol[i]/256/2;
-				int8_t out=
-					((
+				int8_t out;
+				// if(i==3){
+				// 	if(theta[i]!=prev)
+				// 		lfsr[i]=(lfsr[i]>>1)|(((lfsr[i]>>0)^(lfsr[i]>>2)^(lfsr[i]>>3)^(lfsr[i]>>5))<<15);
+				// 	out=(lfsr[i]&0x8000?127:-127)*vol[i]/256/2;
+				// }
+				// else
+				{
+					out=((
 						(cfg[i]>>3)&1?
-						(int16_t)(theta[i]>>8)-128:
-						sin_table[(theta[i]+sin_table[phi[i]>>10]*((vol[i]>>1)+41))>>10]
+						// (int16_t)(theta[i]>>8)-128:
+						theta[i]<0x4000?127:-127:
+						sin_table[(theta[i]+sin_table[phi[i]>>10]*(cfg[i]&1?41:(vol[i]>>1)+41))>>10]
 					)*vol[i]/256)/2;
+				}
 				if(i<(poly>>1))out_r+=out;
 				else out_l+=out;
 			}
@@ -147,55 +153,54 @@ int main(){
 	PORTB.PIN3CTRL=PORT_PULLUPEN_bm|PORT_ISC_LEVEL_gc;
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);
-	// sei();
-	// play(yobikomi);
+
 	while(1){
-		// blink(0b00110011);sleep();play(kokyo_no_sora);
-		// blink(0b00110011);sleep();play(toryanse);
+		blink(0b00110011);sleep();play(kokyo_no_sora);
+		blink(0b00110011);sleep();play(toryanse);
 		blink(0b00110011);sleep();play(famima);
-		// blink(0b00110011);sleep();play(kakko);
+		blink(0b00110011);sleep();play(kakko);
 		blink(0b00110011);sleep();play(ofuro);
 		blink(0b00110011);sleep();play(jingle);play(yobikomi);
 		blink(0b00110011);sleep();play(jingle_bell);
 		blink(0b00110011);sleep();play(petrouchka);
 		blink(0b00110011);sleep();play(nyan);
-		// blink(0b00110011);sleep();play(small_world);
-		// blink(0b00110011);sleep();play(kewpie);
+		blink(0b00110011);sleep();play(small_world);
+		blink(0b00110011);sleep();play(kewpie);
 		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
-		// blink(0b00110011);sleep();play(allback);
-		// blink(0b00110011);sleep();play(gakuseigai_no_kissatenn);
+		blink(0b00110011);sleep();play(allback);
+		blink(0b00110011);sleep();play(gakuseigai_no_kissatenn);
 		blink(0b00110011);sleep();play(waltzing_in_the_rain);
-		// blink(0b00110011);sleep();play(surfboard);
+		blink(0b00110011);sleep();play(surfboard);
 
-		// blink(0b00110011);sleep();play(sf_3);
-		// blink(0b00110011);sleep();play(haru_new);
+		blink(0b00110011);sleep();play(sf_3);
+		blink(0b00110011);sleep();play(haru_new);
 
-		// blink(0b00110011);sleep();play(sh1);
-		// blink(0b00110011);sleep();play(sh2);
-		// blink(0b00110011);sleep();play(sh3);
-		// blink(0b00110011);sleep();play(sh4);
-		// blink(0b00110011);sleep();play(sh5);
-		// blink(0b00110011);sleep();play(sh6);
-		// blink(0b00110011);sleep();play(sh7);
-		// blink(0b00110011);sleep();play(sh8);
-		// blink(0b00110011);sleep();play(sh9);
+		blink(0b00110011);sleep();play(sh1);
+		blink(0b00110011);sleep();play(sh2);
+		blink(0b00110011);sleep();play(sh3);
+		blink(0b00110011);sleep();play(sh4);
+		blink(0b00110011);sleep();play(sh5);
+		blink(0b00110011);sleep();play(sh6);
+		blink(0b00110011);sleep();play(sh7);
+		blink(0b00110011);sleep();play(sh8);
+		blink(0b00110011);sleep();play(sh9);
 
-		// blink(0b00110011);sleep();play(gota_del_vient);
-		// blink(0b00110011);sleep();play(verde_rayo);
-		// blink(0b00110011);sleep();play(water_crown);
-		// blink(0b00110011);sleep();play(ciello_estrellado);
-		// blink(0b00110011);sleep();play(moon_stone);
-		// blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
-		// blink(0b00110011);sleep();play(mori_no_yousei);
-		// blink(0b00110011);sleep();play(asatuyu);
+		blink(0b00110011);sleep();play(gota_del_vient);
+		blink(0b00110011);sleep();play(verde_rayo);
+		blink(0b00110011);sleep();play(water_crown);
+		blink(0b00110011);sleep();play(ciello_estrellado);
+		blink(0b00110011);sleep();play(moon_stone);
+		blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
+		blink(0b00110011);sleep();play(mori_no_yousei);
+		blink(0b00110011);sleep();play(asatuyu);
 
-		// blink(0b00110011);sleep();play(azamino);
-		// blink(0b00110011);sleep();play(holiday);
-		// blink(0b00110011);sleep();play(springbox);
-		// blink(0b00110011);sleep();play(sennro_no_kanata);
-		// blink(0b00110011);sleep();play(mellow_time);
-		// blink(0b00110011);sleep();play(cappuccino);
-		// blink(0b00110011);sleep();play(ogawa_no_seseragi);
+		blink(0b00110011);sleep();play(azamino);
+		blink(0b00110011);sleep();play(holiday);
+		blink(0b00110011);sleep();play(springbox);
+		blink(0b00110011);sleep();play(sennro_no_kanata);
+		blink(0b00110011);sleep();play(mellow_time);
+		blink(0b00110011);sleep();play(cappuccino);
+		blink(0b00110011);sleep();play(ogawa_no_seseragi);
 	}
 
 }
