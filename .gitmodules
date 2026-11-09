@@ -1,0 +1,4 @@
+[submodule "2g"]
+	path = 2g
+	url = git@github.com:McbeEringi/avr-musicbox
+	branch = 2g
