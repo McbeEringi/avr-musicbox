@@ -123,7 +123,12 @@ void main(){
 	// TCB0 波形生成 これが解像度 可聴域上端の2倍弱あれば何とかなる 20MHz/500=40kHz
 	TCB0.CTRLA=TCB_ENABLE_bm;// 分周無し TCB有効
 	// TCB0.CTRLB=TCB_CNTMODE_INT_gc;// 周期的割り込み動作
-	TCB0.CCMP=F_CPU/4e4-1;// TOP
+	#ifdef OSCCAL
+		TCB0.CCMP=F_CPU/1024*(1024+(int8_t)SIGROW.OSC20ERR5V)/40e3-1;
+	#else
+		TCB0.CCMP=F_CPU/40e3-1;// TOP
+	#endif
+
 
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);// 分周無効化 CPUも周辺機能も20MHz
 		PORTA.DIRSET=0b11001000;// 出力: PA3
