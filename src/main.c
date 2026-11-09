@@ -23,7 +23,7 @@ const int8_t sin_table[]={
    -12
 };
 
-const uint16_t d_theta[]={// C9 ~ B9
+const uint16_t dds_base[]={// C9 ~ B9
 	// [...Array(12)].map((_,i)=>Math.round(65536/(20000/(440*(2**((i-9)/12+5))))))
   27433, 29065, 30793,
   32624, 34564, 36619,
@@ -32,12 +32,7 @@ const uint16_t d_theta[]={// C9 ~ B9
 };
 
 
-#define NUM_POLY 4
-
-uint8_t test[]={0,4,7,11};
-
-uint16_t lfsr=0xace1;
-void lfsr_step(){lfsr=(lfsr>>1)|(((lfsr>>0)^(lfsr>>2)^(lfsr>>3)^(lfsr>>5))<<15);}
+#define POLY_MAX 4
 
 #define BTN_DOWN ~VPORTB.IN&(1<<3)
 void wait(){
@@ -56,31 +51,29 @@ ISR(PORTB_PORT_vect){PORTB.INTFLAGS=PORT_INT3_bm;}// リセット必須
 
 static void blink(uint8_t x){FOR(8){if((x>>i)&1)PORTA.OUTSET=0b10000000;else PORTA.OUTCLR=0b10000000;for(uint16_t j=0;j<1250;j++)wait();}}
 
-
-#define MTRKS NUM_POLY
-
 void play(const uint8_t *s){
 	static const uint8_t
-	*p[MTRKS],*_p[MTRKS];// チャネルポインタ ループ用に二重保存
+	*p[POLY_MAX],*_p[POLY_MAX];// チャネルポインタ ループ用に二重保存
 	static uint8_t
-	t[MTRKS<<1]={},_t[MTRKS],// 音価
-	cfg[MTRKS]={},_v[MTRKS],// 設定項目 音量
-	ntrks;// 有効トラック数
+	t[POLY_MAX<<1]={},_t[POLY_MAX],// 音価
+	cfg[POLY_MAX]={},vol[POLY_MAX],// 設定項目 音量
+	poly,// 有効トラック数
+	env;// envelope counter
 	int8_t out_l,out_r;
 	uint16_t
 	h=(*s++<<8)|(*s++),// ヘッダ
-	n[MTRKS]={},theta[MTRKS],phi[MTRKS],// 音高
-	env,// 減衰カウンタ
+	dds_step[POLY_MAX]={},theta[POLY_MAX],phi[POLY_MAX],// 音高
+	lfsr[POLY_MAX]={0xace1},
 	dt=12e5/(h>>5),_dt;// 最小音価 20000*60/TPM
 
-	ntrks=0;
-	while(ntrks<MTRKS){if(*s++==0){if(*s==0)break;p[ntrks++]=s;}}// チャネル数&ポインタ読取
+	poly=0;
+	while(poly<POLY_MAX){if(*s++==0){if(*s==0)break;p[poly++]=s;}}// チャネル数&ポインタ読取
 
 
 	while(1){
-		_dt=ntrks;env=1;FOR(ntrks){_p[i]=p[i];_t[i]=0;}// 初期化
+		_dt=poly;env=1;FOR(poly){_p[i]=p[i];_t[i]=0;}// 初期化
 		while(1){
-			if(--_dt<ntrks){
+			if(--_dt<poly){
 				if(*_p[_dt]&&!_t[_dt]--){
 					while(!(*_p[_dt]&0x80)){
 						if(*_p[_dt]>>6==1)t[(_dt<<1)|((*_p[_dt]>>5)&1)]=*_p[_dt]&0x1f;// 音価メモリ変更
@@ -90,41 +83,41 @@ void play(const uint8_t *s){
 					}
 					_t[_dt]=t[(_dt<<1)|((*_p[_dt]>>6)&1)];// 音価1bit(5bit)
 					// n[_dt]=(*_p[_dt]&0xf)>11?0:n0[*_p[_dt]&0xf]>>(((*_p[_dt]>>4)&3)+((cfg[_dt]>>3)&1?1:4));// オクターブ2+1bit 音高4bit
-					n[_dt]=(*_p[_dt]&0xf)>11?0:d_theta[*_p[_dt]&0xf]>>(((cfg[_dt]>>3)&1?8:5)-((*_p[_dt]>>4)&3));
+					dds_step[_dt]=(*_p[_dt]&0xf)>11?0:dds_base[*_p[_dt]&0xf]>>(((cfg[_dt]>>3)&1?8:5)-((*_p[_dt]>>4)&3));
 					theta[_dt]=0;// 波形カウンタリセット
 					phi[_dt]=0;// 波形カウンタリセット
-					_v[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
+					vol[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
 					_p[_dt]++;
 				}
 				if(!_dt)_dt=dt;
 			}
 			out_l=0;
 			out_r=0;
-			FOR(ntrks){// 楽音合成
+			FOR(poly){// 楽音合成
 				uint16_t prev=theta[i];
-				theta[i]+=n[i];
-				phi[i]+=n[i]*(((cfg[i]>>1)&1)?3:1);
+				theta[i]+=dds_step[i];
+				phi[i]+=dds_step[i]*(((cfg[i]>>1)&1)?3:1);
 
 
-	      // if(theta[i]<prev)lfsr_step();
+	      // if(theta[i]<prev)lfsr=(lfsr>>1)|(((lfsr>>0)^(lfsr>>2)^(lfsr>>3)^(lfsr>>5))<<15);
 	      // out+=lfsr&0x8000?32:-32;
 				int8_t out=
 					((
 						(cfg[i]>>3)&1?
 						(int16_t)(theta[i]>>8)-128:
-						sin_table[(theta[i]+sin_table[phi[i]>>10]*((_v[i]>>1)+41))>>10]
-					)*_v[i]/256)/2;
-				if(i<(ntrks>>1))out_r+=out;
+						sin_table[(theta[i]+sin_table[phi[i]>>10]*((vol[i]>>1)+41))>>10]
+					)*vol[i]/256)/2;
+				if(i<(poly>>1))out_r+=out;
 				else out_l+=out;
 
 				// if(++_n[i]==n[i])_n[i]=0;
-				// if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=_v[i]>>2;
+				// if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=vol[i]>>2;
 			}
 			// TCA0.SINGLE.CMP2BUF=out;
-			if(ntrks==1)out_r=out_l;
+			if(poly==1)out_r=out_l;
 			TCA0.SINGLE.CMP0BUF=out_r+128;
 			TCA0.SINGLE.CMP1BUF=out_l+128;
-			if(--env<ntrks){if(!(cfg[env]&1))_v[env]-=(_v[env]>>4);if(!env)env=192;}// 減衰 9.6ms毎
+			if(--env<poly){if(!(cfg[env]&1))vol[env]-=(vol[env]>>4);if(!env)env=255;}// envelope : every 0.05*255=12.75ms
 			if(BTN_DOWN)goto fin;// ボタン離脱
 			wait();
 		}
@@ -144,6 +137,9 @@ int main(){
 
 	// TCB0 as Timer 20kHz
 	#ifdef OSCCAL
+		// error(OSCxERRxV) <<< error(int op)
+		// Do not expect any dramatic improvement.
+		// Cosumes worthless 310B!!
 		TCB0.CCMP=F_CPU/1024*(1024+(int8_t)SIGROW.OSC20ERR5V)/20e3-1;
 	#else
 		TCB0.CCMP=F_CPU/20e3-1;
