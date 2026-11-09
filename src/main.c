@@ -56,14 +56,14 @@ void play(const uint8_t *s){
 	*p[POLY_MAX],*_p[POLY_MAX];// チャネルポインタ ループ用に二重保存
 	static uint8_t
 	t[POLY_MAX<<1]={},_t[POLY_MAX],// 音価
-	cfg[POLY_MAX]={},vol[POLY_MAX],// 設定項目 音量
-	poly,// 有効トラック数
-	env;// envelope counter
+	cfg[POLY_MAX]={},vol[POLY_MAX],
+	poly,
+	env;
 	int8_t out_l,out_r;
 	uint16_t
 	h=(*s++<<8)|(*s++),// ヘッダ
-	dds_step[POLY_MAX]={},theta[POLY_MAX],phi[POLY_MAX],// 音高
-	lfsr[POLY_MAX]={0xace1},
+	dds_step[POLY_MAX],theta[POLY_MAX],phi[POLY_MAX],
+	lfsr[POLY_MAX],
 	dt=12e5/(h>>5),_dt;// 最小音価 20000*60/TPM
 
 	poly=0;
@@ -71,7 +71,7 @@ void play(const uint8_t *s){
 
 
 	while(1){
-		_dt=poly;env=1;FOR(poly){_p[i]=p[i];_t[i]=0;}// 初期化
+		_dt=poly;env=1;FOR(poly){_p[i]=p[i];_t[i]=0;lfsr[i]=0xace1;}// 初期化
 		while(1){
 			if(--_dt<poly){
 				if(*_p[_dt]&&!_t[_dt]--){
@@ -82,25 +82,23 @@ void play(const uint8_t *s){
 						_p[_dt]++;
 					}
 					_t[_dt]=t[(_dt<<1)|((*_p[_dt]>>6)&1)];// 音価1bit(5bit)
-					// n[_dt]=(*_p[_dt]&0xf)>11?0:n0[*_p[_dt]&0xf]>>(((*_p[_dt]>>4)&3)+((cfg[_dt]>>3)&1?1:4));// オクターブ2+1bit 音高4bit
 					dds_step[_dt]=(*_p[_dt]&0xf)>11?0:dds_base[*_p[_dt]&0xf]>>(((cfg[_dt]>>3)&1?8:5)-((*_p[_dt]>>4)&3));
-					theta[_dt]=0;// 波形カウンタリセット
-					phi[_dt]=0;// 波形カウンタリセット
-					vol[_dt]=0xff>>((cfg[_dt]>>2)&1);// 音量 
+					theta[_dt]=0;phi[_dt]=0;
+					vol[_dt]=0xff>>((cfg[_dt]>>2)&1);
 					_p[_dt]++;
 				}
 				if(!_dt)_dt=dt;
 			}
 			out_l=0;
 			out_r=0;
-			FOR(poly){// 楽音合成
+			FOR(poly){// synthesis
 				uint16_t prev=theta[i];
 				theta[i]+=dds_step[i];
 				phi[i]+=dds_step[i]*(((cfg[i]>>1)&1)?3:1);
 
 
-	      // if(theta[i]<prev)lfsr=(lfsr>>1)|(((lfsr>>0)^(lfsr>>2)^(lfsr>>3)^(lfsr>>5))<<15);
-	      // out+=lfsr&0x8000?32:-32;
+	      // if(theta[i]<prev)lfsr[i]=(lfsr[i]>>1)|(((lfsr[i]>>0)^(lfsr[i]>>2)^(lfsr[i]>>3)^(lfsr[i]>>5))<<15);
+	      // int8_t out=(lfsr[i]&0x8000?127:-127)*vol[i]/256/2;
 				int8_t out=
 					((
 						(cfg[i]>>3)&1?
@@ -109,11 +107,7 @@ void play(const uint8_t *s){
 					)*vol[i]/256)/2;
 				if(i<(poly>>1))out_r+=out;
 				else out_l+=out;
-
-				// if(++_n[i]==n[i])_n[i]=0;
-				// if(_n[i]<(n[i]>>(((cfg[i]>>1)&1)+1)))out+=vol[i]>>2;
 			}
-			// TCA0.SINGLE.CMP2BUF=out;
 			if(poly==1)out_r=out_l;
 			TCA0.SINGLE.CMP0BUF=out_r+128;
 			TCA0.SINGLE.CMP1BUF=out_l+128;
@@ -121,7 +115,7 @@ void play(const uint8_t *s){
 			if(BTN_DOWN)goto fin;// ボタン離脱
 			wait();
 		}
-		dc:if(!(h&1))break;// ループ
+		dc:if(!(h&1))break;// Da Capo
 	}
 	fin:TCA0.SINGLE.CMP0BUF=128;
 	TCA0.SINGLE.CMP1BUF=128;
@@ -155,53 +149,53 @@ int main(){
 	_PROTECTED_WRITE(CLKCTRL.MCLKCTRLB,0);
 	// sei();
 	// play(yobikomi);
-		while(1){
-		blink(0b00110011);sleep();play(kokyo_no_sora);
-		blink(0b00110011);sleep();play(toryanse);
+	while(1){
+		// blink(0b00110011);sleep();play(kokyo_no_sora);
+		// blink(0b00110011);sleep();play(toryanse);
 		blink(0b00110011);sleep();play(famima);
-		blink(0b00110011);sleep();play(kakko);
+		// blink(0b00110011);sleep();play(kakko);
 		blink(0b00110011);sleep();play(ofuro);
 		blink(0b00110011);sleep();play(jingle);play(yobikomi);
 		blink(0b00110011);sleep();play(jingle_bell);
 		blink(0b00110011);sleep();play(petrouchka);
 		blink(0b00110011);sleep();play(nyan);
-		blink(0b00110011);sleep();play(small_world);
-		blink(0b00110011);sleep();play(kewpie);
+		// blink(0b00110011);sleep();play(small_world);
+		// blink(0b00110011);sleep();play(kewpie);
 		blink(0b00110011);sleep();play(dw3battle);play(dw3level);
-		blink(0b00110011);sleep();play(allback);
-		blink(0b00110011);sleep();play(gakuseigai_no_kissatenn);
+		// blink(0b00110011);sleep();play(allback);
+		// blink(0b00110011);sleep();play(gakuseigai_no_kissatenn);
 		blink(0b00110011);sleep();play(waltzing_in_the_rain);
-		blink(0b00110011);sleep();play(surfboard);
+		// blink(0b00110011);sleep();play(surfboard);
 
-		blink(0b00110011);sleep();play(sf_3);
-		blink(0b00110011);sleep();play(haru_new);
+		// blink(0b00110011);sleep();play(sf_3);
+		// blink(0b00110011);sleep();play(haru_new);
 
-		blink(0b00110011);sleep();play(sh1);
-		blink(0b00110011);sleep();play(sh2);
-		blink(0b00110011);sleep();play(sh3);
-		blink(0b00110011);sleep();play(sh4);
-		blink(0b00110011);sleep();play(sh5);
-		blink(0b00110011);sleep();play(sh6);
-		blink(0b00110011);sleep();play(sh7);
-		blink(0b00110011);sleep();play(sh8);
-		blink(0b00110011);sleep();play(sh9);
+		// blink(0b00110011);sleep();play(sh1);
+		// blink(0b00110011);sleep();play(sh2);
+		// blink(0b00110011);sleep();play(sh3);
+		// blink(0b00110011);sleep();play(sh4);
+		// blink(0b00110011);sleep();play(sh5);
+		// blink(0b00110011);sleep();play(sh6);
+		// blink(0b00110011);sleep();play(sh7);
+		// blink(0b00110011);sleep();play(sh8);
+		// blink(0b00110011);sleep();play(sh9);
 
-		blink(0b00110011);sleep();play(gota_del_vient);
-		blink(0b00110011);sleep();play(verde_rayo);
-		blink(0b00110011);sleep();play(water_crown);
-		blink(0b00110011);sleep();play(ciello_estrellado);
-		blink(0b00110011);sleep();play(moon_stone);
-		blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
-		blink(0b00110011);sleep();play(mori_no_yousei);
-		blink(0b00110011);sleep();play(asatuyu);
+		// blink(0b00110011);sleep();play(gota_del_vient);
+		// blink(0b00110011);sleep();play(verde_rayo);
+		// blink(0b00110011);sleep();play(water_crown);
+		// blink(0b00110011);sleep();play(ciello_estrellado);
+		// blink(0b00110011);sleep();play(moon_stone);
+		// blink(0b00110011);sleep();play(rakuraku_tetudou_ryokou);
+		// blink(0b00110011);sleep();play(mori_no_yousei);
+		// blink(0b00110011);sleep();play(asatuyu);
 
-		blink(0b00110011);sleep();play(azamino);
-		blink(0b00110011);sleep();play(holiday);
-		blink(0b00110011);sleep();play(springbox);
-		blink(0b00110011);sleep();play(sennro_no_kanata);
-		blink(0b00110011);sleep();play(mellow_time);
-		blink(0b00110011);sleep();play(cappuccino);
-		blink(0b00110011);sleep();play(ogawa_no_seseragi);
+		// blink(0b00110011);sleep();play(azamino);
+		// blink(0b00110011);sleep();play(holiday);
+		// blink(0b00110011);sleep();play(springbox);
+		// blink(0b00110011);sleep();play(sennro_no_kanata);
+		// blink(0b00110011);sleep();play(mellow_time);
+		// blink(0b00110011);sleep();play(cappuccino);
+		// blink(0b00110011);sleep();play(ogawa_no_seseragi);
 	}
 
 }
