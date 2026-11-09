@@ -2,13 +2,14 @@
 
 CC=avr-gcc
 FILE=src/main.c
-CFLAGS=-mmcu=attiny1604 -DF_CPU=20e6 -Os ${FILE}
+CFLAGS=-mmcu=attiny1604 -DF_CPU=20e6 -DOSCCAL -Os -flto ${FILE}
 
 main:write clean
 write:main.elf
 	 - avrdude -v -c serialupdi -xrtsdtr=high -p t1604 -P /dev/$(shell ls /sys/bus/usb-serial/devices|tail -n1) -U flash:w:main.elf
 main.elf:
 	${CC} ${CFLAGS} -o main.elf
+	avr-size -A main.elf
 main.S:
 	${CC} -S ${CFLAGS} -o main.S
 clean:
