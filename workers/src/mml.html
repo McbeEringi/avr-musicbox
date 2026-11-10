@@ -1,0 +1,23 @@
+<script type="build">
+import cfg from'config_default';
+import tmpl from'html_tmpl';
+
+export default tmpl({
+	...cfg,
+	title:'mml',
+	desc:'mml playground and compiler for avr-musicbox'
+});
+</script>
+
+<script type="module">
+import{EditorView,keymap,showPanel,setup}from'https://cm.6ca.me/index.mjs';
+import{javascript}from'https://cm.6ca.me/javascript.mjs';
+
+new EditorView({
+	parent:document.body,
+	doc:`'hello!'`,
+	extensions:[
+		setup,javascript(),
+	]
+});
+</script>
