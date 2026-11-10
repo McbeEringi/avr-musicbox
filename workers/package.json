@@ -1,0 +1,16 @@
+{
+	"name": "avr-musicbox-workers",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev"
+	},
+	"dependencies": {
+		"6ca-ssg": "git+https://github.com/mcbeeringi/6ca-ssg.git"
+	},
+	"devDependencies": {
+		"wrangler": "^4.24.3"
+	}
+}
