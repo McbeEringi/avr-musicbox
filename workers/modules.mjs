@@ -12,6 +12,9 @@ html_tmpl=c=>x=>({...x,html:`\
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>${c.title}</title>
 	<meta name="description" content="${c.desc}">
+	<link rel="icon" type="image/png" href="/img/favicon.png">
+	<link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+	<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 	<meta property="og:type" content="website">
 	<meta property="og:title" content="${c.title}">
 	<meta property="og:description" content="${c.desc}">
