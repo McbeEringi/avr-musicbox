@@ -73,3 +73,6 @@ NNNNOOLL: play
 	- xor noise
 - push 4bit~
 - if goto pop 8bit
+
+減衰リセット命令がほしい cf:すらー、あるぺじお
+位相リセットはデフォでしない
