@@ -2,7 +2,6 @@ const
 config_default={
 	title:'avr-musicbox',
 	desc:'A simple yet powerful musicbox built on tinyAVR0',
-	ogpimg:'https://6ca.me/img/icon.png',
 	origin:'https://avr-musicbox.6ca.me/'
 },
 html_tmpl=c=>x=>({...x,html:`\
@@ -19,7 +18,7 @@ html_tmpl=c=>x=>({...x,html:`\
 	<meta property="og:title" content="${c.title}">
 	<meta property="og:description" content="${c.desc}">
 	<meta property="og:url" content="${new URL(x.path,c.origin)}">
-	<meta property="og:image" content="${c.ogpimg}">
+	<meta property="og:image" content="${new URL('/img/apple-touch-icon.png',c.origin)}">
 	<link href="https://6ca.me/src/style.css" rel="stylesheet">
 ${x.style.length?`\t<style>${x.style.join('\n')}\t</style>\n`:''}\
 	<script>document.documentElement.addEventListener('touchstart',_=>_,{passive:true});</script>
