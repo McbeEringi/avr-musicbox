@@ -2,7 +2,7 @@ const
 config_default={
 	title:'avr-musicbox',
 	desc:'A simple yet powerful musicbox built on tinyAVR0',
-	origin:'https://avr-musicbox.6ca.me/'
+	origin:'https://avr.6ca.me/'
 },
 html_tmpl=c=>x=>({...x,html:`\
 <!DOCTYPE html>
