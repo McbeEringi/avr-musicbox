@@ -4,7 +4,7 @@
 	"compatibility_date": "2026-11-09",
 	"build":{"command":"bun 6ca-ssg","watch_dir":["src","modules.mjs"]},
 	"routes":[
-		{"pattern":"avr-musicbox.6ca.me","custom_domain":true}
+		{"pattern":"avr.6ca.me/avr-musicbox/*","zone_name":"6ca.me"}
 	],
 	"assets":{"directory":"./dst","not_found_handling":"404-page"},
 	"observability":{"enabled":true},
